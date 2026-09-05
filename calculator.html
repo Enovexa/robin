@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage Calculator — Estimate Your Monthly Payment | Robin Thomas</title>
+<meta name="description" content="Use Robin Thomas's free interactive mortgage calculator to estimate your monthly payment, including principal, interest, taxes, insurance, and HOA — for Houston, Sugar Land, Pearland & Missouri City buyers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --obsidian:#ffffff;
+    --plaster:#171512;
+    --plaster-dim:#5c574c;
+    --brass:#ab8552;
+    --brass-bright:#8a6a3f;
+    --hair: rgba(23,21,18,0.1);
+    --cream: #faf8f4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{ scroll-behavior:smooth; overflow-x:hidden; }
+  html,body{ height:100%; }
+  body{
+    background:var(--obsidian);
+    color:var(--plaster);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--brass); color:#fff; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+  img{ max-width:100%; display:block; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  :focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+
+  .container{ max-width:1180px; margin:0 auto; padding:0 48px; }
+  @media (max-width:700px){ .container{ padding:0 24px; } }
+
+  .hero .container{ max-width:none; margin:0; padding:0; }
+
+  .eyebrow-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass-bright);
+    margin-bottom:14px;
+    display:block;
+  }
+
+  h1.display, h2.display{
+    font-family:'Fraunces', serif;
+    font-weight:300;
+    letter-spacing:-0.01em;
+    color:var(--plaster);
+  }
+  h1.display{ font-size:clamp(28px, 3.2vw, 48px); line-height:1.35; padding-bottom:12px; max-width:700px; }
+  h2.display{ font-size:clamp(26px, 3.4vw, 42px); line-height:1.12; }
+  h1.display em, h2.display em{ font-style:normal; color:inherit; font-weight:inherit; }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:15px 26px; border-radius:3px;
+    transition:all 0.25s ease; border:1px solid transparent;
+  }
+  .btn-primary{ background:var(--plaster); color:#fff; }
+  .btn-primary:hover{ background:var(--brass-bright); }
+  .btn-secondary{ background:transparent; color:var(--plaster); border-color:var(--hair); }
+  .btn-secondary:hover{ border-color:var(--plaster); }
+  .btn-row{ display:none; gap:16px; flex-wrap:wrap; align-items:center; }
+
+  /* Apply Now button (nav bar) */
+  .btn-apply{
+    background:#c9a06c;
+    color:#1a1a1a;
+    font-weight:700;
+    border:1px solid #c9a06c;
+    padding:12px 35px;
+    font-size:11px;
+  }
+  .btn-apply:hover{
+    background:#b98f58;
+    border-color:#b98f58;
+    color:#1a1a1a;
+  }
+  .mobile-nav-apply{
+    display:flex;
+    justify-content:center;
+    margin-top:12px;
+  }
+
+  /* ---------- header & navigation ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0;
+    z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 48px;
+    background:rgba(255,255,255,0.94);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;
+    transition:border-color 0.3s;
+  }
+  header.scrolled{ border-bottom-color:var(--hair); }
+  @media (max-width:700px){ header{ padding:20px 24px; } }
+
+  .left-cluster{ display:flex; align-items:center; gap:44px; }
+
+  .logo-block{ display:flex; flex-direction:column; line-height:1; }
+  .logo-block .logo-name{
+    font-family:'Fraunces', serif; font-weight:700; font-size:19px;
+    letter-spacing:0.01em; color:var(--plaster); text-transform:uppercase;
+  }
+  .logo-block .logo-name + .logo-name{ margin-top:2px; }
+  .logo-block .logo-role{
+    margin-top:7px; font-family:'IBM Plex Mono', monospace; font-size:9px;
+    font-weight:500; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--brass-bright); max-width:150px; line-height:1.3;
+  }
+  .logo-block .logo-nmls{
+    margin-top:4px; font-family:'IBM Plex Mono', monospace; font-size:9px;
+    font-weight:500; letter-spacing:0.04em; color:var(--plaster-dim);
+  }
+
+  /* Navigation Styles */
+  .nav-menu{ display:flex; gap:40px; align-items:center; }
+  .nav-item{ position:relative; }
+  
+  .nav-link{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:#000; opacity:0.75; transition:opacity 0.3s; font-family:'IBM Plex Mono', monospace;
+    display:flex; align-items:center; gap:6px;
+    padding:8px 0;
+  }
+  .nav-link:hover{ opacity:1; }
+
+  .nav-arrow{
+    width:0; height:0;
+    border-left:3px solid transparent;
+    border-right:3px solid transparent;
+    border-top:4px solid currentColor;
+    transition:transform 0.3s;
+  }
+
+  .nav-item.dropdown-parent:hover .nav-arrow{ transform:rotate(180deg); }
+
+  /* Dropdown Menu */
+  .dropdown-menu{
+    position:absolute; top:100%; left:0; margin-top:12px;
+    background:var(--obsidian); border:1px solid var(--hair);
+    border-radius:4px; box-shadow:0 8px 24px rgba(0,0,0,0.08);
+    min-width:200px; opacity:0; visibility:hidden;
+    transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+    transform:translateY(-10px);
+    z-index:100;
+  }
+
+  .nav-item.dropdown-parent:hover .dropdown-menu{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+
+  .dropdown-menu a{
+    display:block; padding:12px 20px;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--plaster); opacity:0.75;
+    transition:all 0.2s;
+  }
+
+  .dropdown-menu a:hover{
+    opacity:1; background:var(--cream);
+  }
+
+  .dropdown-menu a:first-child{ padding-top:16px; }
+  .dropdown-menu a:last-child{ padding-bottom:16px; }
+
+  .header-cta{ margin-left:auto; }
+
+  @media (max-width:980px){ 
+    .nav-menu{ display:none; } 
+    .header-cta{ display:none; }
+  }
+
+  /* ---------- mobile nav toggle (hamburger) ---------- */
+  .nav-toggle{
+    display:none;
+    flex-direction:column; justify-content:center; align-items:flex-end; gap:5px;
+    width:32px; height:32px; background:transparent; border:none; padding:0;
+    position:relative; z-index:60; flex-shrink:0;
+  }
+  .nav-toggle span{
+    display:block; width:100%; height:2px; background:var(--plaster); border-radius:2px;
+    transition:transform 0.3s ease, opacity 0.2s ease, width 0.3s ease;
+  }
+  .nav-toggle span:nth-child(2){ width:70%; }
+  .nav-toggle.is-open span{ width:100%; }
+  .nav-toggle.is-open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .nav-toggle.is-open span:nth-child(2){ opacity:0; }
+  .nav-toggle.is-open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  @media (max-width:980px){
+    .nav-toggle{ display:flex; }
+  }
+
+  /* ---------- mobile nav panel ---------- */
+  .mobile-nav-overlay{
+    position:fixed; inset:0; z-index:54;
+    background:rgba(23,21,18,0.45);
+    opacity:0; visibility:hidden; transition:opacity 0.3s ease;
+  }
+  .mobile-nav-overlay.is-open{ opacity:1; visibility:visible; }
+
+  .mobile-nav{
+    position:fixed; top:0; right:0; bottom:0; z-index:55;
+    width:min(320px, 84vw); max-width:100%;
+    background:#ffffff;
+    box-shadow:-10px 0 32px rgba(23,21,18,0.12);
+    transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:100px 28px 40px;
+  }
+  .mobile-nav.is-open{ transform:translateX(0); }
+
+  .mobile-nav-link{
+    display:block; padding:16px 0;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--plaster);
+  }
+
+  
+  .mobile-nav-item-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 0; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--plaster);
+  }
+  .mobile-nav-arrow{
+    width:8px; height:8px; flex-shrink:0;
+    border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
+    transform:rotate(45deg); transition:transform 0.25s ease;
+  }
+  .mobile-nav-item.is-open .mobile-nav-arrow{ transform:rotate(-135deg); }
+
+  .mobile-nav-submenu{ max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+  .mobile-nav-item.is-open .mobile-nav-submenu{ max-height:400px; }
+  .mobile-nav-submenu a{
+    display:block; padding:11px 0 11px 14px;
+    font-family:'Inter', sans-serif; font-size:13.5px; color:var(--plaster-dim);
+  }
+  .mobile-nav-submenu a:hover{ color:var(--plaster); }
+
+  body.nav-open{ overflow:hidden; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative; height:100svh; min-height:640px;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0; overflow:hidden; background:var(--obsidian);
+  }
+  @media (max-width:700px){ .hero{ padding:0; } }
+  .hero-bg{ position:absolute; inset:0; z-index:0; }
+  .hero-bg img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%;
+    opacity:0; transition:opacity 1.5s ease-in-out;
+  }
+  .hero-bg img.is-active{ opacity:1; }
+  .hero-bg-overlay{ position:absolute; inset:0; z-index:1; background:rgba(0,0,0,0.55); }
+  .hero-content{ position:relative; z-index:2; width:100%; }
+  .hero-text{ max-width:660px; margin-top:0; margin-left:0; padding-left:48px; }
+  @media (max-width:700px){ .hero-text{ padding-left:24px; } }
+  .hero-sub p{ max-width:460px; font-size:15px; color:rgba(255,255,255,0.82); line-height:1.7; margin-top:18px; }
+  .hero .eyebrow-label{ color:#e8c99a; }
+  .hero h1.display{ color:#ffffff; }
+  .hero-actions{ margin-top:32px; display:none; }
+
+  .reveal{ opacity:0; transform:translateY(28px); animation:rise 1s cubic-bezier(.16,1,.3,1) forwards; }
+  .reveal.d1{ animation-delay:0.15s; }
+  .reveal.d2{ animation-delay:0.3s; }
+  .reveal.d3{ animation-delay:0.45s; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .char-word{ display:inline-block; white-space:nowrap; }
+  .char-mask{ display:inline-block; overflow-x:visible; overflow-y:hidden; vertical-align:bottom; line-height:1.05; padding-bottom:0.28em; margin-bottom:-0.28em; }
+  .char-mask .char{ display:inline-block; transform:translateY(-110%); opacity:0; animation:charSlideDown 0.9s cubic-bezier(.16,1,.3,1) forwards; will-change:transform, opacity; }
+  .char-space{ display:inline-block; width:0.28em; }
+  @keyframes charSlideDown{ to{ transform:translateY(0); opacity:1; } }
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{ animation:none; opacity:1; transform:none; }
+    .char-mask .char{ animation:none; opacity:1; transform:none; }
+  }
+
+  /* ---------- shared section scaffolding ---------- */
+  .section{ padding:96px 0; }
+  @media (max-width:700px){ .section{ padding:64px 0; } }
+  .section-head{ max-width:620px; margin-bottom:56px; }
+  @media (max-width:700px){ .section-head{ margin-bottom:36px; } }
+  p.lede{ margin-top:16px; font-size:15px; color:var(--plaster-dim); line-height:1.7; max-width:480px; }
+  .section-alt{ background:var(--cream); }
+  .section-rule{ border-top:1px solid var(--hair); }
+
+  /* ---------- trust bar ---------- */
+  .trust-bar{ padding:40px 0; }
+  .trust-bar-compact{
+    padding:32px 0; border-top:none;
+    background:#000000;
+  }
+  .trust-bar-compact .trust-item .trust-figure{ color:#ffffff; }
+  .trust-bar-compact .trust-item .trust-label{ color:rgba(255,255,255,0.6); }
+  .trust-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; text-align:left; }
+  @media (max-width:820px){ .trust-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:480px){ .trust-item .trust-figure.trust-figure-nmls{ font-size:16px; } }
+  .trust-item .trust-figure{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(24px,2.6vw,32px); color:var(--plaster); line-height:1; white-space:nowrap; }
+  .trust-item .trust-figure.trust-figure-nmls{ font-size:clamp(18px,1.9vw,24px); }
+  .trust-item .trust-label{ margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--plaster-dim); }
+
+  /* ---------- loan programs ---------- */
+  .program-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  @media (max-width:820px){ .program-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .program-grid{ grid-template-columns:1fr; } }
+  .program-card{ background:var(--obsidian); padding:36px 32px; display:flex; flex-direction:column; border:1px solid var(--hair); border-radius:4px; transition:background 0.25s, border-color 0.25s, box-shadow 0.25s; }
+  .program-card:hover{ background:var(--cream); border-color:var(--brass); box-shadow:0 8px 24px rgba(23,21,18,0.06); }
+  .program-card .program-index{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--brass-bright); margin-bottom:18px; }
+  .program-card h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:10px; color:var(--plaster); }
+  .program-card p{ font-size:13.5px; line-height:1.65; color:var(--plaster-dim); flex-grow:1; }
+  .program-card .program-link{ margin-top:20px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--plaster); display:inline-flex; align-items:center; gap:6px; }
+  .program-card .program-link span{ transition:transform 0.25s; }
+  .program-card:hover .program-link span{ transform:translateX(4px); }
+
+  /* ---------- loan programs: pinned horizontal-scroll gallery ---------- */
+  .programs-scroll{ position:relative; background:var(--obsidian); }
+  .programs-pin{
+    height:100vh; min-height:520px;
+    display:flex; flex-direction:column;
+    padding-top:96px; padding-bottom:28px;
+    overflow:hidden;
+  }
+  .programs-pin .section-head{ padding:0 48px; margin-bottom:24px; flex-shrink:0; }
+  .program-track{
+    flex:1 1 auto; min-height:0;
+    display:flex; align-items:center; gap:20px; padding:0 48px;
+    will-change:transform;
+  }
+  .program-track .program-card{
+    flex:0 0 300px; width:300px; height:auto;
+    padding:32px 28px; justify-content:flex-start; overflow:hidden;
+  }
+  .program-track .program-card .program-link{ margin-top:24px; }
+  .program-progress-track{
+    margin:20px 48px 0; height:2px; background:var(--hair); border-radius:2px; overflow:hidden; flex-shrink:0;
+  }
+  .program-progress-fill{
+    height:100%; width:0%; background:var(--brass); border-radius:2px;
+    transform-origin:left center; transition:width 0.05s linear;
+  }
+  @media (max-width:700px){
+    .programs-pin .section-head{ padding:0 24px; }
+    .program-track{ padding:0 24px; gap:16px; }
+    .program-track .program-card{ flex-basis:260px; width:260px; padding:24px 20px; }
+    .program-progress-track{ margin:16px 24px 0; }
+  }
+  /* Below the pin breakpoint, the fallback is native swipe scroll, so hide the JS-driven progress line */
+  @media (max-width:899px){
+    .program-progress-track{ display:none; }
+  }
+  /* Below the pin breakpoint, fall back to a plain swipeable row — no JS pinning */
+  @media (max-width:899px){
+    .programs-pin{ height:auto; padding:96px 0; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
+    .program-track{ transform:none !important; }
+    .program-track .program-card{ height:auto; min-height:380px; scroll-snap-align:start; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .programs-pin{ height:auto; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .program-track{ transform:none !important; }
+  }
+
+  /* ---------- why choose us (pinned, scroll-revealed) ---------- */
+  .whyus-pin-section{
+    position:relative;
+    background:
+      linear-gradient(rgba(250,248,244,0.90), rgba(250,248,244,0.90)),
+      url('https://images.unsplash.com/photo-1757924461488-ef9ad0670978?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .whyus-pin{
+    height:100svh; min-height:560px; overflow:hidden;
+    display:flex; align-items:flex-start;
+    padding-top:132px; padding-bottom:28px; box-sizing:border-box;
+  }
+  .whyus-wrap{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:start; width:100%; }
+  @media (max-width:820px){ .whyus-wrap{ grid-template-columns:1fr; gap:28px; } }
+  .whyus-wrap .section-head{ margin-bottom:0; }
+  .whyus-wrap .section-head h2.display{ font-size:clamp(22px, 2.6vw, 34px); line-height:1.2; }
+  .whyus-wrap .section-head p.lede{ margin-top:12px; font-size:13.5px; line-height:1.6; }
+
+  .whyus-list{ display:flex; flex-direction:column; }
+  .whyus-item{
+    padding:12px 0;
+    display:flex; gap:18px; align-items:flex-start;
+    opacity:0; transform:translateY(20px);
+  }
+  .whyus-item .whyus-index{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--brass-bright); padding-top:3px; flex-shrink:0; }
+  .whyus-item h3{ font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin-bottom:5px; color:var(--plaster); }
+  .whyus-item p{ font-size:13px; line-height:1.55; color:var(--plaster-dim); max-width:440px; }
+
+  .whyus-progress-track{ display:flex; gap:8px; margin-top:22px; }
+  .whyus-progress-dot{ width:28px; height:2px; background:var(--hair); border-radius:2px; overflow:hidden; position:relative; }
+  .whyus-progress-dot .fill{ position:absolute; inset:0; background:var(--brass); width:0%; transition:width 0.05s linear; }
+
+  @media (max-width:820px){
+    /* Below the pin breakpoint: plain stacked list, no pin/scrub */
+    .whyus-pin{ height:auto; padding:64px 0 64px; }
+    .whyus-item{ opacity:1; transform:none; padding:16px 0; border-top:1px solid var(--hair); }
+    .whyus-item:last-child{ border-bottom:1px solid var(--hair); }
+    .whyus-progress-track{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .whyus-item{ opacity:1; transform:none; }
+    .whyus-progress-track{ display:none; }
+  }
+
+  /* ---------- service areas ---------- */
+  /* Pinned in place while CTA banner slides over it (GSAP ScrollTrigger, JS-driven). Needs its own
+     stacking context so it stays beneath the CTA banner (z-index:2) once GSAP switches it to fixed. */
+  .areas-bg{ position:relative; z-index:1; }
+  .areas-wrap{ display:grid; grid-template-columns:1.1fr 1fr; gap:64px; align-items:center; }
+  @media (max-width:820px){ .areas-wrap{ grid-template-columns:1fr; gap:32px; } }
+  .areas-list{ display:flex; flex-direction:column; justify-content:center; }
+  .areas-list li{ display:flex; align-items:baseline; justify-content:space-between; padding:16px 0; font-family:'Fraunces', serif; font-size:19px; }
+  .areas-list li:first-child{ padding-top:0; }
+  .areas-list li .area-tag{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--brass-bright); }
+
+  /* Fit this section's content to a single screen instead of stacking large section padding */
+  .section-fit{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:64px 0; }
+  @media (max-width:700px){ .section-fit{ min-height:auto; padding:56px 0; } }
+
+  /* ---------- section fade-up on scroll ---------- */
+  .fade-up-section{ opacity:0; transform:translateY(36px); transition:opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1); }
+  .fade-up-section.in-view{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion:reduce){
+    .fade-up-section{ opacity:1; transform:none; transition:none; }
+  }
+
+  /* ---------- about teaser ---------- */
+  .about-teaser{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:56px; align-items:center; }
+  @media (max-width:820px){ .about-teaser{ grid-template-columns:1fr; gap:32px; } }
+  .about-portrait{ display:block; width:auto; height:auto; max-width:100%; max-height:68vh; object-fit:contain; margin:0 auto; background:var(--cream); border:1px solid var(--hair); order:2; }
+  @media (max-width:820px){ .about-portrait{ order:0; width:100%; max-width:420px; max-height:none; margin:0 auto; } }
+  .about-copy{ order:1; }
+  @media (max-width:820px){ .about-copy{ order:0; } }
+  .about-copy h2.display{ font-size:clamp(22px, 2.6vw, 34px); margin-bottom:12px !important; }
+  .about-copy p{ font-size:13.5px; line-height:1.6; color:var(--plaster-dim); margin-bottom:12px; max-width:520px; }
+  .about-copy .btn-row-static{ display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }
+
+  /* ---------- process ---------- */
+  .process-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:48px; }
+  @media (max-width:820px){ .process-grid{ grid-template-columns:1fr; gap:36px; } }
+  .process-step .process-index{ font-family:'Fraunces', serif; font-size:15px; color:var(--brass-bright); border:1px solid var(--brass); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+  .process-step h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:10px; }
+  .process-step p{ font-size:13.5px; line-height:1.65; color:var(--plaster-dim); max-width:280px; }
+
+  /* ---------- testimonials ---------- */
+  .testimonial-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--hair); border:1px solid var(--hair); }
+  @media (max-width:820px){ .testimonial-grid{ grid-template-columns:1fr; } }
+  .testimonial-card{ background:var(--obsidian); padding:40px; }
+  .testimonial-card .stars{ font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.1em; color:var(--brass); margin-bottom:18px; }
+  .testimonial-card blockquote{ font-family:'Fraunces', serif; font-weight:400; font-size:18px; line-height:1.5; color:var(--plaster); margin-bottom:20px; }
+  .testimonial-card .testimonial-attr{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--plaster-dim); }
+
+  /* ---------- CTA banner ---------- */
+  .cta-banner{
+    position:relative; z-index:2;
+    padding:120px 0; text-align:center; min-height:560px; display:flex; align-items:center;
+    background:
+      linear-gradient(rgba(8,7,6,0.62), rgba(8,7,6,0.72)),
+      url('https://images.unsplash.com/photo-1746041890750-4b277f7bf88b?w=2400&auto=format&fit=crop&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDd8fHxlbnwwfHx8fHw%3D');
+    background-size:cover;
+    background-position:center bottom;
+    background-repeat:no-repeat;
+  }
+  .cta-banner .container{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  .cta-banner .eyebrow-label{ color:var(--brass); }
+  .cta-banner h2.display{ max-width:640px; color:#ffffff; }
+  .cta-banner p.lede{ margin:0 auto; max-width:560px; color:rgba(255,255,255,0.72); }
+  .cta-banner .btn-row-static{ display:flex; gap:16px; margin-top:32px; flex-wrap:wrap; justify-content:center; }
+  @media (max-width:700px){ .cta-banner{ min-height:auto; padding:80px 0; } }
+
+  /* ---------- light-beam button (rotating gradient border) ---------- */
+  @property --gradient-angle{
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes border-spin{
+    from{ --gradient-angle: 0deg; }
+    to{ --gradient-angle: 360deg; }
+  }
+  .btn-lightbeam{
+    position:relative; isolation:isolate; display:inline-flex;
+    border-radius:999px; padding:1.5px;
+    background: conic-gradient(from var(--gradient-angle), transparent 0%, var(--brass) 38%, var(--brass-bright) 50%, transparent 62%, transparent 100%);
+    animation: border-spin 2.4s linear infinite;
+    box-shadow:0 0 24px -8px rgba(171,133,82,0.45);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  .btn-lightbeam:hover{ box-shadow:0 0 32px -6px rgba(171,133,82,0.6); transform:translateY(-1px); }
+  .btn-lightbeam:active{ transform:translateY(0) scale(0.98); }
+  .btn-lightbeam-inner{
+    position:relative; z-index:1; overflow:hidden;
+    display:inline-flex; align-items:center; gap:8px;
+    background:#ffffff;
+    color:#171512;
+    padding:15px 34px; border-radius:999px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    transition:background 0.3s ease;
+  }
+  .btn-lightbeam:hover .btn-lightbeam-inner{ background:#f5f0e8; }
+  .btn-lightbeam-inner::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 0%, rgba(171,133,82,0.18) 0%, transparent 65%);
+    opacity:0; transition:opacity 0.4s ease; pointer-events:none;
+  }
+  .btn-lightbeam:hover .btn-lightbeam-inner::after{ opacity:1; }
+  @media (prefers-reduced-motion:reduce){
+    .btn-lightbeam{ animation:none; }
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    margin-top:0; padding:72px 48px 40px; background:var(--cream); color:var(--plaster); border-top:1px solid var(--hair);
+  }
+  @media (max-width:700px){ footer{ padding:48px 24px 32px; } }
+
+  .footer-grid{
+    display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:48px 60px;
+    margin-bottom:48px;
+  }
+  @media (max-width:820px){
+    .footer-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .footer-grid{ grid-template-columns:1fr; }
+  }
+
+  .footer-brand-name{ font-family:'Fraunces', serif; font-weight:600; font-size:26px; letter-spacing:0.01em; color:var(--plaster); text-transform:uppercase; }
+  .footer-brand-role{ display:block; margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--brass-bright); }
+  .footer-brand-desc{ margin-top:20px; font-size:14px; line-height:1.75; color:var(--plaster-dim); max-width:300px; }
+
+  .footer-divider{ margin:28px 0 24px; border-top:1px solid var(--hair); max-width:300px; }
+
+  .footer-powered{ display:flex; align-items:center; gap:14px; }
+  .edge-badge{
+    flex-shrink:0; width:160px; height:76px;
+    background:#fff; border:1px solid var(--hair); border-radius:6px;
+    box-shadow:0 2px 10px rgba(23,21,18,0.06);
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    padding:8px 12px;
+  }
+  .edge-badge img{ width:100%; height:100%; object-fit:contain; }
+
+  .footer-powered-text{ line-height:1.4; }
+  .footer-powered-title{ font-family:'Inter', sans-serif; font-weight:600; font-size:12px; color:var(--brass-bright); }
+  .footer-powered-nmls{ margin-top:2px; font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:0.04em; color:var(--plaster-dim); text-transform:uppercase; }
+
+  .footer-col h4{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--brass-bright); margin-bottom:22px; }
+  .footer-col ul li{ margin-bottom:14px; }
+  .footer-col a{ font-size:14.5px; color:var(--plaster-dim); transition:color 0.2s; }
+  .footer-col a:hover{ color:var(--plaster); }
+
+  .footer-compliance-text{ font-size:13px; line-height:1.75; color:var(--plaster-dim); margin-bottom:18px; max-width:280px; }
+
+  .footer-bottom{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--plaster-dim);
+    padding-top:28px; border-top:1px solid var(--hair);
+  }
+  @media (max-width:560px){
+    .footer-bottom{ flex-direction:column; gap:16px; text-align:center; align-items:center; }
+    .footer-bottom div{ flex-direction:column; gap:12px; }
+  }
+  .footer-bottom a{ color:var(--plaster-dim); }
+  .footer-bottom a:hover{ color:var(--plaster); }
+
+  .footer-legal{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.08em; }
+
+  /* ---------- page hero (interior pages) ---------- */
+  .page-hero{
+    position:relative;
+    height:100svh; min-height:640px;
+    display:flex; align-items:center;
+    padding:172px 0 72px;
+    overflow:hidden;
+    background-color:#08070a;
+    background-image:
+      linear-gradient(180deg, rgba(8,7,6,0.55) 0%, rgba(8,7,6,0.68) 55%, rgba(8,7,6,0.94) 92%, rgba(8,7,6,1) 100%),
+      url('https://images.unsplash.com/photo-1775590766317-8fd3ef7d721c?q=80&w=2400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fG1vcnRnYWdlJTIwcmF0ZXN8ZW58MHx8MHx8fDA%3D');
+    background-size:cover;
+    background-position:center bottom;
+    background-repeat:no-repeat;
+  }
+  @media (max-width:700px){ .page-hero{ padding:140px 0 48px; } }
+  .page-hero .container{ max-width:none; margin:0; padding:0; }
+  .page-hero .hero-text{ max-width:660px; margin-top:0; margin-left:0; padding-left:48px; }
+  @media (max-width:700px){ .page-hero .hero-text{ padding-left:24px; } }
+  .page-hero .eyebrow-label{ color:#e8c99a; }
+  .page-hero h1.display{ max-width:720px; color:#ffffff; }
+  .page-hero p.lede{ max-width:560px; margin-top:18px; color:rgba(255,255,255,0.82); }
+
+  /* ---------- calculator tool section: compact, fits one screen ---------- */
+  .calc-page-section{ padding:16px 0 24px; }
+  .calc-page-section .section-head{ margin-bottom:14px !important; }
+  .calc-page-section .section-head h2.display{ font-size:clamp(18px, 1.8vw, 22px); }
+  .calc-page-section .section-head p.lede{ margin-top:6px; font-size:12.5px; }
+  @media (max-width:700px){ .calc-page-section{ padding:16px 0; } }
+
+  /* ---------- about bio ---------- */
+  .about-credentials{ margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .about-credentials li{ display:flex; gap:10px; align-items:baseline; font-size:13.5px; color:var(--plaster-dim); }
+  .about-credentials li strong{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--brass-bright); min-width:120px; }
+
+  /* ---------- values / why-us static grid ---------- */
+  .value-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+  @media (max-width:820px){ .value-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .value-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- static service area list (non-pinned variant) ---------- */
+  .areas-wrap-static{ display:grid; grid-template-columns:1.1fr 1fr; gap:64px; align-items:center; }
+  @media (max-width:820px){ .areas-wrap-static{ grid-template-columns:1fr; gap:32px; } }
+
+  /* ---------- journey timeline (About page only) ---------- */
+  .journey-timeline{ display:flex; flex-direction:column; gap:22px; }
+  .journey-item{ display:grid; grid-template-columns:130px 1fr; gap:28px; align-items:start; }
+  .journey-year{ font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.06em; color:var(--brass-bright); padding-top:26px; }
+  .journey-box{
+    border:1px solid var(--hair);
+    border-radius:10px;
+    background:var(--cream);
+    padding:26px 30px;
+    box-shadow:0 2px 10px rgba(23,21,18,0.04);
+    transition:border-color 0.25s, box-shadow 0.25s;
+  }
+  .journey-box:hover{ border-color:var(--brass); box-shadow:0 4px 16px rgba(23,21,18,0.07); }
+  .journey-item h3{ font-family:'Fraunces', serif; font-weight:500; font-size:18px; margin-bottom:8px; color:var(--plaster); }
+  .journey-item p{ font-size:13.5px; line-height:1.65; color:var(--plaster-dim); max-width:480px; }
+  @media (max-width:560px){
+    .journey-item{ grid-template-columns:1fr; gap:10px; }
+    .journey-year{ padding-top:0; }
+    .journey-box{ padding:20px 22px; }
+  }
+
+  /* ---------- journey: dark card-grid variant ---------- */
+  .journey-dark-section{
+    position:relative;
+    background:
+      linear-gradient(rgba(8,7,6,0.82), rgba(8,7,6,0.88)),
+      url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?w=1800&auto=format&fit=crop&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzZ8fGNvbnN1bHRpbmd8ZW58MHx8MHx8fDA%3D');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .journey-dark-section .eyebrow-label{ color:#e8c99a; }
+  .journey-dark-section h2.display{ color:#fff; max-width:360px; }
+  .journey-dark-section p.lede{ color:rgba(255,255,255,0.62); max-width:340px; }
+
+  .journey-wrap{
+    display:grid;
+    grid-template-columns:0.85fr 1.15fr;
+    gap:56px;
+    max-width:none;
+    align-items:start;
+  }
+  .journey-intro .section-head{ margin-bottom:0; max-width:400px; }
+  .journey-intro{ position:sticky; top:120px; }
+
+  /* ---------- journey: compact 2x2 card grid ---------- */
+  .journey-points{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .journey-point{
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:10px;
+    background:rgba(255,255,255,0.03);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    padding:16px 18px;
+    opacity:0;
+    transform:translateY(24px);
+    transition:opacity 0.6s cubic-bezier(.16,1,.3,1), transform 0.6s cubic-bezier(.16,1,.3,1), border-color 0.25s;
+  }
+  .journey-point:hover{ border-color:rgba(232,201,154,0.4); }
+  .fade-up-section.in-view .journey-point{ opacity:1; transform:translateY(0); }
+  .journey-point:nth-child(1){ transition-delay:0.05s; }
+  .journey-point:nth-child(2){ transition-delay:0.2s; }
+  .journey-point:nth-child(3){ transition-delay:0.35s; }
+  .journey-point:nth-child(4){ transition-delay:0.5s; }
+  .journey-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px; letter-spacing:0.1em; text-transform:uppercase;
+    color:#e8c99a; display:block; margin-bottom:8px;
+  }
+  .journey-point h3{
+    font-family:'Fraunces', serif; font-weight:500; font-size:14.5px;
+    color:#fff; margin-bottom:6px; line-height:1.25;
+  }
+  .journey-point p{
+    font-size:12px; line-height:1.55; color:rgba(255,255,255,0.62);
+  }
+  @media (prefers-reduced-motion:reduce){
+    .journey-point{ opacity:1; transform:none; transition:none; }
+  }
+  @media (max-width:820px){
+    .journey-wrap{ grid-template-columns:1fr; gap:28px; }
+    .journey-intro{ position:static; }
+    .journey-points{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- direct broker advantage (About page only) ---------- */
+  .advantage-wrap{ display:grid; grid-template-columns:1fr 0.9fr; gap:64px; align-items:center; }
+  @media (max-width:820px){ .advantage-wrap{ grid-template-columns:1fr; gap:32px; } }
+  .advantage-lede{ max-width:520px; margin-top:16px; font-size:15px; color:var(--plaster-dim); line-height:1.75; }
+  .advantage-grid{ display:flex; flex-direction:column; gap:48px; }
+  .advantage-card{ display:flex; gap:16px; align-items:flex-start; }
+  .advantage-check{ width:32px; height:32px; border-radius:50%; border:1.5px solid var(--brass); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .advantage-check svg{ width:16px; height:16px; }
+  .advantage-card h3{ font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin-bottom:6px; color:var(--plaster); }
+  .advantage-card p{ font-size:13.5px; line-height:1.6; color:var(--plaster-dim); }
+
+  /* ---------- advantage: pinned stage + staged card reveal + Journey overlap ----------
+     .advantage-stick-stage is a tall scroll runway (height S = 240vh). Its inner panel
+     (height V = 100vh) pins via position:sticky for the entire runway, giving the freeze.
+     While pinned, the two cards reveal one at a time (JS, based on px scrolled into the pin).
+     Journey is pulled up by margin-top:-V so its top lands exactly V above the runway's own
+     bottom edge. That means Journey stays fully off-screen (below the viewport) until the
+     runway's last V worth of scroll — at which point it slides up from the bottom and covers
+     the still-pinned panel over the course of exactly one viewport height of scroll, finishing
+     right as the pin releases. Keep S, V and Journey's margin-top consistent if you retune this:
+     idle buffer before overlap starts = S - (2 * V). */
+  .advantage-stick-stage{ position:relative; height:280vh; }
+  .advantage-stick-inner{
+    position:sticky; top:0;
+    height:100vh; min-height:640px;
+    display:flex; align-items:center;
+    overflow:hidden;
+    background:
+      linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)),
+      url('https://images.unsplash.com/photo-1738566062082-bd8126574d76?w=2400&auto=format&fit=crop&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDd8fHxlbnwwfHx8fHw%3D');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    z-index:1;
+  }
+  .advantage-card-reveal{
+    opacity:0; transform:translateY(24px);
+    transition:opacity 0.45s cubic-bezier(.16,1,.3,1), transform 0.45s cubic-bezier(.16,1,.3,1);
+  }
+  .advantage-card-reveal.is-visible{ opacity:1; transform:translateY(0); }
+
+  .journey-dark-section.journey-overlap{
+    position:relative; z-index:2;
+    margin-top:-100vh; /* must equal .advantage-stick-inner's height (V) */
+    min-height:100vh; /* content must fill V or the overlap leaves a gap before the next section */
+    display:flex; align-items:center;
+  }
+
+  @media (max-width:820px){
+    /* Below the pin breakpoint: plain stacked layout, no pin/scrub/overlap */
+    .advantage-stick-stage{ height:auto; }
+    .advantage-stick-inner{ position:static; height:auto; min-height:auto; display:block; padding:64px 0; }
+    .advantage-card-reveal{ opacity:1; transform:none; transition:none; }
+    .journey-dark-section.journey-overlap{ margin-top:0; min-height:auto; display:block; position:relative; z-index:auto; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .advantage-stick-stage{ height:auto; }
+    .advantage-stick-inner{ position:static; height:auto; min-height:auto; display:block; padding:64px 0; }
+    .advantage-card-reveal{ opacity:1; transform:none; transition:none; }
+    .journey-dark-section.journey-overlap{ margin-top:0; min-height:auto; display:block; z-index:auto; }
+  }
+
+  /* ---------- pull-quote (About page only) ---------- */
+  .pull-quote{ max-width:760px; margin:0 auto; text-align:center; }
+  .pull-quote blockquote{ font-family:'Fraunces', serif; font-weight:300; font-size:clamp(22px,2.6vw,32px); line-height:1.45; color:var(--plaster); }
+  .pull-quote .testimonial-attr{ display:block; margin-top:22px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--plaster-dim); }
+
+  /* ---------- mortgage calculator ---------- */
+  .calc-wrap{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:40px; }
+  @media (max-width:900px){ .calc-wrap{ grid-template-columns:1fr; gap:24px; } }
+
+  .calc-inputs, .calc-result{ background:transparent; padding:0; }
+  .calc-inputs{ padding-right:36px; border-right:1px solid var(--hair); }
+  @media (max-width:900px){ .calc-inputs{ padding-right:0; border-right:none; padding-bottom:24px; border-bottom:1px solid var(--hair); } }
+
+  .calc-inputs h3, .calc-result h3{
+    font-family:'Fraunces', serif; font-weight:500; font-size:16px; color:var(--plaster); margin-bottom:16px;
+  }
+
+  .calc-field{ margin-bottom:10px; }
+  .calc-field:last-child{ margin-bottom:0; }
+  .calc-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:480px){ .calc-field-row{ grid-template-columns:1fr; } }
+
+  .calc-label{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--plaster-dim); margin-bottom:6px;
+  }
+  .calc-label .calc-live-val{ color:var(--brass-bright); font-size:10.5px; }
+
+  .calc-input-shell{ position:relative; display:flex; align-items:center; }
+  .calc-input-shell .calc-prefix, .calc-input-shell .calc-suffix{
+    position:absolute; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--plaster-dim); pointer-events:none;
+  }
+  .calc-input-shell .calc-prefix{ left:14px; }
+  .calc-input-shell .calc-suffix{ right:14px; }
+
+  .calc-num{
+    width:100%; padding:9px 14px; font-family:'Inter', sans-serif; font-size:14px; color:var(--plaster);
+    background:var(--cream); border:1px solid var(--hair); border-radius:4px;
+    transition:border-color 0.2s, background 0.2s;
+  }
+  .calc-input-shell .calc-prefix + .calc-num{ padding-left:26px; }
+  .calc-input-shell .calc-num:has(+ .calc-suffix){ padding-right:34px; }
+  .calc-num:focus{ outline:none; border-color:var(--brass); background:var(--obsidian); }
+
+  select.calc-num{ appearance:none; -webkit-appearance:none; cursor:pointer; background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c574c' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:right 14px center; background-size:16px; padding-right:40px; }
+
+  .calc-range{
+    width:100%; height:2px; border-radius:2px; background:var(--hair);
+    appearance:none; -webkit-appearance:none; outline:none; margin-top:4px;
+  }
+  .calc-range::-webkit-slider-thumb{
+    appearance:none; -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--brass); border:2px solid #fff; box-shadow:0 0 0 1px var(--brass); cursor:pointer;
+  }
+  .calc-range::-moz-range-thumb{
+    width:14px; height:14px; border-radius:50%; background:var(--brass); border:2px solid #fff; box-shadow:0 0 0 1px var(--brass); cursor:pointer;
+  }
+
+  /* result panel */
+  .calc-result{ background:transparent; display:flex; flex-direction:column; }
+  .calc-total-figure{ font-family:'Fraunces', serif; font-weight:300; font-size:clamp(26px,2.8vw,34px); color:var(--plaster); line-height:1; }
+  .calc-total-label{ margin-top:6px; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--brass-bright); }
+
+  .calc-bar{ display:flex; width:100%; height:6px; border-radius:6px; overflow:hidden; margin:10px 0 10px; background:var(--hair); }
+  .calc-bar span{ height:100%; display:block; transition:width 0.3s ease; }
+  .calc-bar .seg-pi{ background:var(--plaster); }
+  .calc-bar .seg-tax{ background:var(--brass); }
+  .calc-bar .seg-ins{ background:var(--brass-bright); }
+  .calc-bar .seg-hoa{ background:#c9b190; }
+  .calc-bar .seg-pmi{ background:#d9a441; }
+
+  .calc-breakdown{ display:flex; flex-direction:column; gap:4px; }
+  .calc-breakdown-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--plaster-dim); padding-bottom:5px; border-bottom:1px solid var(--hair); }
+  .calc-breakdown-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .calc-breakdown-row .calc-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; flex-shrink:0; }
+  .calc-breakdown-row .calc-key{ display:flex; align-items:center; color:var(--plaster); font-size:12.5px; }
+  .calc-breakdown-row .calc-val{ font-family:'IBM Plex Mono', monospace; color:var(--plaster); }
+
+  .calc-footnote-grid{ margin-top:14px; padding-top:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .calc-footnote-grid div{
+    padding:12px 14px; border-top:none;
+    background:var(--cream); border:1px solid var(--hair); border-radius:4px;
+  }
+  .calc-footnote-grid .calc-fn-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:var(--plaster-dim); margin-bottom:6px; }
+  .calc-footnote-grid .calc-fn-val{ font-family:'Fraunces', serif; font-size:16px; color:var(--plaster); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (max-width:480px){ .calc-footnote-grid{ grid-template-columns:1fr; } }
+
+  .calc-disclaimer{ margin-top:10px; font-size:10.5px; line-height:1.5; color:var(--plaster-dim); max-width:640px; }
+
+  /* slider mark labels */
+  .calc-range-marks{ display:flex; justify-content:space-between; margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.03em; color:var(--plaster-dim); }
+  .calc-range-marks span.is-note{ color:var(--brass-bright); }
+
+  /* down payment $ / % dual input */
+  .calc-dual-input{ display:grid; grid-template-columns:1fr 84px; gap:10px; }
+
+  /* simple mode / taxes & fees segmented toggle */
+  .calc-mode-toggle{ display:inline-flex; border:1px solid var(--hair); border-radius:4px; overflow:hidden; margin:10px 0 10px; }
+  .calc-mode-btn{ padding:9px 16px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--plaster-dim); background:var(--cream); border:none; transition:background 0.2s, color 0.2s; }
+  .calc-mode-btn.is-active{ background:var(--plaster); color:#fff; }
+
+  .calc-taxfees-fields{ display:none; }
+  .calc-taxfees-fields.is-visible{ display:block; }
+
+  /* result panel: eyebrow chip + loan summary box */
+  .calc-result-chip{ display:inline-block; align-self:flex-start; padding:5px 12px; border:1px solid var(--brass); border-radius:3px; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--brass-bright); margin-bottom:14px; }
+
+  .calc-loan-summary{ margin-top:10px; padding:10px 14px; background:var(--obsidian); border:1px solid var(--hair); border-radius:4px; }
+  .calc-loan-summary .calc-fn-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:var(--brass-bright); margin-bottom:10px; }
+  .calc-summary-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--plaster-dim); padding:4px 0; }
+  .calc-summary-row .calc-val{ font-family:'IBM Plex Mono', monospace; color:var(--plaster); }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER & NAVIGATION -->
+<header id="siteHeader">
+  <div class="left-cluster">
+    <div class="logo-block">
+      <span class="logo-name">Robin Thomas</span>
+      <span class="logo-role">Mortgage Broker & Advisor</span>
+      <span class="logo-nmls">NMLS #2453986</span>
+    </div>
+
+    <!-- Multi-Page Navigation with Dropdowns -->
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <a href="index.html" class="nav-link">Home</a>
+      </div>
+      <div class="nav-item">
+        <a href="about.html" class="nav-link">About</a>
+      </div>
+
+      <!-- Loan Programs Dropdown -->
+      <div class="nav-item dropdown-parent">
+        <a class="nav-link">
+          Loan Programs
+          <span class="nav-arrow"></span>
+        </a>
+        <div class="dropdown-menu">
+          <a href="loan-fha.html">FHA Loans</a>
+          <a href="loan-va.html">VA Loans</a>
+          <a href="loan-dscr.html">DSCR Loans</a>
+          <a href="loan-bank-statement.html">Bank Statement Loans</a>
+          <a href="loan-first-time-buyers.html">First-Time Buyers</a>
+          <a href="loan-refinancing.html">Refinancing</a>
+        </div>
+      </div>
+
+      <!-- Resources Dropdown -->
+      <div class="nav-item dropdown-parent">
+        <a class="nav-link">
+          Resources
+          <span class="nav-arrow"></span>
+        </a>
+        <div class="dropdown-menu">
+          <a href="resources-insights.html">Mortgage Insights</a>
+          <a href="calculator.html" aria-current="page">Mortgage Calculator</a>
+          
+        </div>
+      </div>
+
+      <div class="nav-item">
+        <a href="contact.html" class="nav-link">Contact</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Apply Now CTA -->
+  <div class="header-cta">
+    <a href="https://edge.my1003app.com/2453986/register?time=1780521146594" class="btn btn-apply" target="_blank" rel="noopener">Apply Now</a>
+  </div>
+
+  <!-- Mobile hamburger toggle -->
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- Mobile nav overlay + slide-in panel -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
+  <a href="index.html" class="mobile-nav-link">Home</a>
+  <a href="about.html" class="mobile-nav-link">About</a>
+
+  <div class="mobile-nav-item">
+    <div class="mobile-nav-item-header">
+      <span>Loan Programs</span>
+      <span class="mobile-nav-arrow"></span>
+    </div>
+    <div class="mobile-nav-submenu">
+      <a href="loan-fha.html">FHA Loans</a>
+      <a href="loan-va.html">VA Loans</a>
+      <a href="loan-dscr.html">DSCR Loans</a>
+      <a href="loan-bank-statement.html">Bank Statement Loans</a>
+      <a href="loan-first-time-buyers.html">First-Time Buyers</a>
+      <a href="loan-refinancing.html">Refinancing</a>
+    </div>
+  </div>
+
+  <div class="mobile-nav-item">
+    <div class="mobile-nav-item-header">
+      <span>Resources</span>
+      <span class="mobile-nav-arrow"></span>
+    </div>
+    <div class="mobile-nav-submenu">
+      <a href="resources-insights.html">Mortgage Insights</a>
+      <a href="calculator.html" aria-current="page">Mortgage Calculator</a>
+    </div>
+  </div>
+
+  <a href="contact.html" class="mobile-nav-link">Contact</a>
+  <a href="https://edge.my1003app.com/2453986/register?time=1780521146594" class="btn btn-apply mobile-nav-apply" target="_blank" rel="noopener">Apply Now</a>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="container">
+    <div class="hero-text">
+      <span class="eyebrow-label reveal">Interactive Tool</span>
+      <h1 class="display reveal d1">Calculate your payments with absolute clarity.</h1>
+      <p class="lede reveal d2">Enter your home price, down payment, and loan details below for an instant, transparent estimate of your monthly payment — principal, interest, taxes, insurance, and HOA all broken out separately.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="section calc-page-section fade-up-section">
+  <div class="container">
+    <div class="section-head" style="margin-bottom:40px;">
+      <span class="eyebrow-label">Mortgage Payment Calculator</span>
+      <h2 class="display">See exactly what a home will cost you, monthly.</h2>
+      <p class="lede">Adjust any field and the estimate updates instantly. This is a planning tool, not a rate quote — reach out for numbers tailored to your actual application.</p>
+    </div>
+
+    <div class="calc-wrap">
+      <!-- INPUTS -->
+      <div class="calc-inputs">
+        <h3>Loan Details</h3>
+
+        <div class="calc-field">
+          <label class="calc-label" for="homePrice">Home Purchase Price</label>
+          <div class="calc-input-shell">
+            <span class="calc-prefix">$</span>
+            <input type="number" id="homePrice" class="calc-num" value="400000" min="100000" max="1500000" step="1000">
+          </div>
+          <input type="range" id="homePriceRange" class="calc-range" value="400000" min="100000" max="1500000" step="1000">
+          <div class="calc-range-marks">
+            <span>$100k</span><span>$500k</span><span>$1M</span><span>$1.5M</span>
+          </div>
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label" for="downPayment">Down Payment</label>
+          <div class="calc-dual-input">
+            <div class="calc-input-shell">
+              <span class="calc-prefix">$</span>
+              <input type="number" id="downPayment" class="calc-num" value="40000" min="0" step="1000">
+            </div>
+            <div class="calc-input-shell">
+              <input type="number" id="downPaymentPct" class="calc-num" value="10" min="5" max="80" step="0.5">
+              <span class="calc-suffix">%</span>
+            </div>
+          </div>
+          <input type="range" id="downPaymentRange" class="calc-range" value="10" min="5" max="80" step="0.5">
+          <div class="calc-range-marks">
+            <span>5% (Minimum)</span><span class="is-note">20% (Avoids PMI)</span><span>80%</span>
+          </div>
+        </div>
+
+        <div class="calc-field-row">
+          <div class="calc-field">
+            <label class="calc-label" for="interestRate">Interest Rate (%)</label>
+            <div class="calc-input-shell">
+              <span class="calc-prefix">%</span>
+              <input type="number" id="interestRate" class="calc-num" value="6.75" min="0" max="20" step="0.05">
+            </div>
+          </div>
+          <div class="calc-field">
+            <label class="calc-label" for="loanTerm">Loan Term</label>
+            <select id="loanTerm" class="calc-num">
+              <option value="30">30-Year Fixed</option>
+              <option value="20">20-Year Fixed</option>
+              <option value="15">15-Year Fixed</option>
+              <option value="10">10-Year Fixed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="calc-mode-toggle" role="group" aria-label="Calculator detail level">
+          <button type="button" id="modeSimpleBtn" class="calc-mode-btn is-active">Simple Mode</button>
+          <button type="button" id="modeTaxFeesBtn" class="calc-mode-btn">Taxes &amp; Fees</button>
+        </div>
+
+        <div id="taxFeesFields" class="calc-taxfees-fields">
+          <div class="calc-field-row">
+            <div class="calc-field">
+              <label class="calc-label" for="propertyTax">Property Tax (Annual %)</label>
+              <div class="calc-input-shell">
+                <input type="number" id="propertyTax" class="calc-num" value="1.2" min="0" max="10" step="0.05">
+                <span class="calc-suffix">%</span>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label class="calc-label" for="homeInsurance">Home Insurance (Annual $)</label>
+              <div class="calc-input-shell">
+                <span class="calc-prefix">$</span>
+                <input type="number" id="homeInsurance" class="calc-num" value="1200" min="0" step="50">
+              </div>
+            </div>
+          </div>
+          <div class="calc-field">
+            <label class="calc-label" for="hoaFee">HOA Dues <span class="calc-live-val">/ mo</span></label>
+            <div class="calc-input-shell">
+              <span class="calc-prefix">$</span>
+              <input type="number" id="hoaFee" class="calc-num" value="0" min="0" step="10">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div class="calc-result">
+        <span class="calc-result-chip">Estimated Payment</span>
+        <div class="calc-total-figure" id="calcTotal">$0</div>
+        <div class="calc-total-label">Estimated Monthly Payment</div>
+
+        <div class="calc-bar">
+          <span class="seg-pi" id="barPI" style="width:70%"></span>
+          <span class="seg-tax" id="barTax" style="width:15%"></span>
+          <span class="seg-ins" id="barIns" style="width:10%"></span>
+          <span class="seg-pmi" id="barPmi" style="width:0%"></span>
+          <span class="seg-hoa" id="barHoa" style="width:5%"></span>
+        </div>
+
+        <div class="calc-breakdown">
+          <div class="calc-breakdown-row">
+            <span class="calc-key"><span class="calc-dot" style="background:var(--plaster);"></span>Principal &amp; Interest</span>
+            <span class="calc-val" id="valPI">$0</span>
+          </div>
+          <div class="calc-breakdown-row">
+            <span class="calc-key"><span class="calc-dot" style="background:var(--brass);"></span>Property Tax</span>
+            <span class="calc-val" id="valTax">$0</span>
+          </div>
+          <div class="calc-breakdown-row">
+            <span class="calc-key"><span class="calc-dot" style="background:var(--brass-bright);"></span>Home Insurance</span>
+            <span class="calc-val" id="valIns">$0</span>
+          </div>
+          <div class="calc-breakdown-row" id="pmiRow" style="display:none;">
+            <span class="calc-key"><span class="calc-dot" style="background:#d9a441;"></span>Private Mortgage Ins. (PMI)</span>
+            <span class="calc-val" id="valPmi">$0</span>
+          </div>
+          <div class="calc-breakdown-row">
+            <span class="calc-key"><span class="calc-dot" style="background:#c9b190;"></span>HOA Dues</span>
+            <span class="calc-val" id="valHoa">$0</span>
+          </div>
+        </div>
+
+        <div class="calc-footnote-grid">
+          <div>
+            <div class="calc-fn-label">Loan Amount</div>
+            <div class="calc-fn-val" id="valLoanAmt">$0</div>
+          </div>
+          <div>
+            <div class="calc-fn-label">Total Interest Paid</div>
+            <div class="calc-fn-val" id="valTotalInterest">$0</div>
+          </div>
+        </div>
+
+        <div class="calc-loan-summary">
+          <div class="calc-fn-label">Loan Summary</div>
+          <div class="calc-summary-row">
+            <span>Total Loan Amount:</span>
+            <span class="calc-val" id="summaryLoanAmt">$0</span>
+          </div>
+          <div class="calc-summary-row">
+            <span id="summaryDownLabel">Down Payment (10%):</span>
+            <span class="calc-val" id="summaryDownAmt">$0</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p class="calc-disclaimer">*Estimate only. Actual payment depends on your credit profile, chosen loan program, lender pricing, and final underwriting — property tax and insurance figures are rough placeholders until an appraisal and quote are in hand. This is not a commitment to lend.</p>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var homePrice = document.getElementById('homePrice');
+    var homePriceRange = document.getElementById('homePriceRange');
+    var downPayment = document.getElementById('downPayment');
+    var downPaymentPct = document.getElementById('downPaymentPct');
+    var downPaymentRange = document.getElementById('downPaymentRange');
+    var interestRate = document.getElementById('interestRate');
+    var loanTerm = document.getElementById('loanTerm');
+    var propertyTax = document.getElementById('propertyTax');
+    var homeInsurance = document.getElementById('homeInsurance');
+    var hoaFee = document.getElementById('hoaFee');
+
+    var modeSimpleBtn = document.getElementById('modeSimpleBtn');
+    var modeTaxFeesBtn = document.getElementById('modeTaxFeesBtn');
+    var taxFeesFields = document.getElementById('taxFeesFields');
+
+    var calcTotal = document.getElementById('calcTotal');
+    var valPI = document.getElementById('valPI');
+    var valTax = document.getElementById('valTax');
+    var valIns = document.getElementById('valIns');
+    var valHoa = document.getElementById('valHoa');
+    var valPmi = document.getElementById('valPmi');
+    var pmiRow = document.getElementById('pmiRow');
+    var valLoanAmt = document.getElementById('valLoanAmt');
+    var valTotalInterest = document.getElementById('valTotalInterest');
+
+    var barPI = document.getElementById('barPI');
+    var barTax = document.getElementById('barTax');
+    var barIns = document.getElementById('barIns');
+    var barPmi = document.getElementById('barPmi');
+    var barHoa = document.getElementById('barHoa');
+
+    // Standard PMI assumption: ~0.5% of loan amount annually, required whenever
+    // down payment is below 20% (matches conventional-loan industry norms).
+    var PMI_ANNUAL_RATE = 0.5;
+
+    var summaryLoanAmt = document.getElementById('summaryLoanAmt');
+    var summaryDownLabel = document.getElementById('summaryDownLabel');
+    var summaryDownAmt = document.getElementById('summaryDownAmt');
+
+    var taxFeesVisible = false;
+
+    function money(n, decimals){
+      if (isNaN(n) || n < 0) n = 0;
+      return '$' + n.toLocaleString('en-US', { maximumFractionDigits: decimals || 0, minimumFractionDigits: decimals || 0 });
+    }
+
+    // keep the $ field, % field, and slider for down payment all in sync
+    function syncDownFromDollar(){
+      var price = parseFloat(homePrice.value) || 0;
+      var down = parseFloat(downPayment.value) || 0;
+      if (down > price) { down = price; downPayment.value = down; }
+      var pct = price > 0 ? (down / price) * 100 : 0;
+      downPaymentPct.value = Math.round(pct * 10) / 10;
+      downPaymentRange.value = pct;
+    }
+    function syncDownFromPct(){
+      var price = parseFloat(homePrice.value) || 0;
+      var pct = parseFloat(downPaymentPct.value) || 0;
+      if (pct > 100) { pct = 100; downPaymentPct.value = 100; }
+      downPaymentRange.value = pct;
+      downPayment.value = Math.round(price * (pct / 100));
+    }
+    function syncDownFromRange(){
+      downPaymentPct.value = downPaymentRange.value;
+      syncDownFromPct();
+    }
+
+    function calculate(){
+      var price = parseFloat(homePrice.value) || 0;
+      var down = parseFloat(downPayment.value) || 0;
+      if (down > price) { down = price; downPayment.value = down; }
+      var rate = parseFloat(interestRate.value) || 0;
+      var years = parseInt(loanTerm.value, 10) || 30;
+      var taxPct = parseFloat(propertyTax.value) || 0;
+      var ins = parseFloat(homeInsurance.value) || 0;
+      var hoa = parseFloat(hoaFee.value) || 0;
+
+      var loanAmt = Math.max(price - down, 0);
+      var monthlyRate = rate / 100 / 12;
+      var numPayments = years * 12;
+
+      var pi = 0;
+      if (loanAmt > 0) {
+        if (monthlyRate === 0) {
+          pi = loanAmt / numPayments;
+        } else {
+          var factor = Math.pow(1 + monthlyRate, numPayments);
+          pi = loanAmt * (monthlyRate * factor) / (factor - 1);
+        }
+      }
+
+      var monthlyTax = (price * (taxPct / 100)) / 12;
+      var monthlyIns = ins / 12;
+      var downPct = price > 0 ? (down / price) * 100 : 0;
+
+      // PMI applies only when down payment is under 20% (avoided at/above 20%)
+      var monthlyPmi = downPct < 20 ? (loanAmt * (PMI_ANNUAL_RATE / 100)) / 12 : 0;
+
+      var total = pi + monthlyTax + monthlyIns + monthlyPmi + hoa;
+      var totalInterest = (pi * numPayments) - loanAmt;
+      var downPctRounded = Math.round(downPct);
+
+      calcTotal.textContent = money(total, 0);
+      valPI.textContent = money(pi, 0) + ' / mo';
+      valTax.textContent = money(monthlyTax, 0) + ' / mo';
+      valIns.textContent = money(monthlyIns, 0) + ' / mo';
+      valHoa.textContent = money(hoa, 0) + ' / mo';
+      valLoanAmt.textContent = money(loanAmt, 0);
+      valTotalInterest.textContent = money(totalInterest > 0 ? totalInterest : 0, 0);
+
+      pmiRow.style.display = monthlyPmi > 0 ? 'flex' : 'none';
+      valPmi.textContent = money(monthlyPmi, 0) + ' / mo';
+
+      summaryLoanAmt.textContent = money(loanAmt, 0);
+      summaryDownLabel.textContent = 'Down Payment (' + downPctRounded + '%):';
+      summaryDownAmt.textContent = money(down, 0);
+
+      var pctPI = total > 0 ? (pi / total) * 100 : 0;
+      var pctTax = total > 0 ? (monthlyTax / total) * 100 : 0;
+      var pctIns = total > 0 ? (monthlyIns / total) * 100 : 0;
+      var pctPmi = total > 0 ? (monthlyPmi / total) * 100 : 0;
+      var pctHoa = total > 0 ? (hoa / total) * 100 : 0;
+
+      barPI.style.width = pctPI + '%';
+      barTax.style.width = pctTax + '%';
+      barIns.style.width = pctIns + '%';
+      barPmi.style.width = pctPmi + '%';
+      barHoa.style.width = pctHoa + '%';
+    }
+
+    // home price: number input <-> slider
+    homePrice.addEventListener('input', function(){ homePriceRange.value = homePrice.value; syncDownFromPct(); calculate(); });
+    homePriceRange.addEventListener('input', function(){ homePrice.value = homePriceRange.value; syncDownFromPct(); calculate(); });
+
+    // down payment: $ field, % field, slider
+    downPayment.addEventListener('input', function(){ syncDownFromDollar(); calculate(); });
+    downPaymentPct.addEventListener('input', function(){ syncDownFromPct(); calculate(); });
+    downPaymentRange.addEventListener('input', function(){ syncDownFromRange(); calculate(); });
+
+    [interestRate, loanTerm, propertyTax, homeInsurance, hoaFee].forEach(function(el){
+      el.addEventListener('input', calculate);
+      el.addEventListener('change', calculate);
+    });
+
+    // Simple Mode / Taxes & Fees toggle
+    function setMode(showTaxFees){
+      taxFeesVisible = showTaxFees;
+      taxFeesFields.classList.toggle('is-visible', showTaxFees);
+      modeTaxFeesBtn.classList.toggle('is-active', showTaxFees);
+      modeSimpleBtn.classList.toggle('is-active', !showTaxFees);
+      calculate();
+    }
+    modeSimpleBtn.addEventListener('click', function(){ setMode(false); });
+    modeTaxFeesBtn.addEventListener('click', function(){ setMode(true); });
+
+    syncDownFromDollar();
+    calculate();
+  })();
+</script>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <span class="footer-brand-name">Robin Thomas</span>
+        <span class="footer-brand-role">Mortgage Broker & Advisor</span>
+        <p class="footer-brand-desc">Robin Thomas is a registered independent mortgage broker. We connect clients with mortgage programs from leading institutional lenders.</p>
+        <div class="footer-divider"></div>
+        <div class="footer-powered">
+          <div class="edge-badge">
+            <img src="finance-logo.png" alt="Edge Home Finance, LLC">
+          </div>
+          <div class="footer-powered-text">
+            <div class="footer-powered-title">Powered by Edge Home Finance, LLC</div>
+            <div class="footer-powered-nmls">Company NMLS #891464</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Mortgage Programs</h4>
+        <ul>
+          <li><a href="loan-fha.html">FHA Loans</a></li>
+          <li><a href="loan-va.html">VA Loans</a></li>
+          <li><a href="loan-dscr.html">DSCR Investor Loans</a></li>
+          <li><a href="loan-bank-statement.html">Bank Statement Loans</a></li>
+          <li><a href="loan-first-time-buyers.html">First Time Home Buyer</a></li>
+          <li><a href="loan-refinancing.html">Refinance Houston</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compliance & Licensing</h4>
+        <p class="footer-compliance-text">*All loan approvals are subject to underwriting criteria, credit review, and property appraisal. This is not a commitment to lend.</p>
+        <p class="footer-compliance-text">Robin Thomas operates strictly as an independent origination broker. Personal NMLS #2453986.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p style="font-size:12px;">© <span id="year"></span> Robin Thomas Mortgage Broker. NMLS #2453986. All rights reserved.</p>
+      <div style="display:flex; gap:32px; align-items:center;">
+        <a href="#" style="font-size:12px; text-decoration:none;">Privacy Policy</a>
+        
+        <a href="#" style="font-size:12px; text-decoration:none;">Licensing Disclaimer</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // header scroll state
+  (function(){
+    var header = document.getElementById('siteHeader');
+    function onScroll(){
+      if (window.scrollY > 12) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    }
+    document.addEventListener('scroll', onScroll);
+    onScroll();
+  })();
+
+  // footer year
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---------- mobile nav (hamburger + slide-in panel) ----------
+  (function(){
+    var toggle = document.getElementById('navToggle');
+    var panel = document.getElementById('mobileNav');
+    var overlay = document.getElementById('mobileNavOverlay');
+    if (!toggle || !panel || !overlay) return;
+
+    function openNav(){
+      toggle.classList.add('is-open');
+      panel.classList.add('is-open');
+      overlay.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('nav-open');
+    }
+    function closeNav(){
+      toggle.classList.remove('is-open');
+      panel.classList.remove('is-open');
+      overlay.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
+    }
+    function toggleNav(){
+      if (panel.classList.contains('is-open')) closeNav();
+      else openNav();
+    }
+
+    toggle.addEventListener('click', toggleNav);
+    overlay.addEventListener('click', closeNav);
+
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') closeNav();
+    });
+
+    // Close the panel automatically if the viewport grows back to desktop size
+    window.addEventListener('resize', function(){
+      if (window.innerWidth > 980) closeNav();
+    });
+
+    // Accordion behavior for Loan Programs / Resources inside the mobile panel
+    var items = Array.prototype.slice.call(panel.querySelectorAll('.mobile-nav-item'));
+    items.forEach(function(item){
+      var header = item.querySelector('.mobile-nav-item-header');
+      header.addEventListener('click', function(){
+        var wasOpen = item.classList.contains('is-open');
+        items.forEach(function(i){ i.classList.remove('is-open'); });
+        if (!wasOpen) item.classList.add('is-open');
+      });
+    });
+
+    // Close the panel when a plain link inside it is tapped
+    panel.querySelectorAll('.mobile-nav-link, .mobile-nav-submenu a').forEach(function(link){
+      link.addEventListener('click', closeNav);
+    });
+  })();
+
+  // ---------- smooth fade-up reveal on scroll (top to bottom) ----------
+  (function(){
+    var targets = Array.prototype.slice.call(document.querySelectorAll('.fade-up-section'));
+    if (!targets.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      targets.forEach(function(el){ el.classList.add('in-view'); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+
+    targets.forEach(function(el){ observer.observe(el); });
+  })();
+
+  // ---------- advantage stage: staggered card reveal while pinned ----------
+  (function(){
+    var stage = document.getElementById('advantageStage');
+    if (!stage) return;
+
+    var cards = Array.prototype.slice.call(stage.querySelectorAll('.advantage-card-reveal'));
+    if (!cards.length) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isMobile = window.matchMedia && window.matchMedia('(max-width: 820px)').matches;
+    if (reduceMotion || isMobile) {
+      cards.forEach(function(c){ c.classList.add('is-visible'); });
+      return;
+    }
+
+    // Each card becomes visible once the user has scrolled this many vh into the
+    // pinned stage. Keep these comfortably less than the idle buffer (S - 2*V in the
+    // CSS above, currently 40vh) so both cards are done well before Journey starts overlapping.
+    var revealPointsVh = [10, 20, 32];
+
+    var ticking = false;
+
+    function updateReveal(){
+      ticking = false;
+      var rect = stage.getBoundingClientRect();
+      var scrolledIntoPin = 0 - rect.top; // px scrolled past the stage's top edge
+      var vh = window.innerHeight / 100;
+
+      cards.forEach(function(card, i){
+        var thresholdPx = revealPointsVh[i] * vh;
+        if (scrolledIntoPin >= thresholdPx) card.classList.add('is-visible');
+        else card.classList.remove('is-visible');
+      });
+    }
+
+    function onScroll(){
+      if (!ticking) {
+        window.requestAnimationFrame(updateReveal);
+        ticking = true;
+      }
+    }
+
+    document.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    updateReveal();
+  })();
+
+
+</script>
+
+</body>
+</html>
