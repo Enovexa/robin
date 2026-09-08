@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // Prevent the browser from restoring a mid-page scroll position on refresh.
+  // GSAP ScrollTrigger builds its "pin-spacer" heights (for the loan-programs
+  // horizontal gallery, the "why us" pin, and the service-areas pin) by
+  // measuring the page as it loads. If the browser jumps back to a scrolled
+  // position before those measurements/pins are set up, ScrollTrigger reserves
+  // the wrong amount of space — which is what causes the big blank gap and the
+  // broken horizontal scroll after a refresh. Always starting at the top keeps
+  // those measurements correct.
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000;}
+
+  /* ---------- NAVBAR ---------- */
+  .navbar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    padding:18px clamp(20px,4vw,48px);
+    background:transparent;
+    pointer-events:none;
+  }
+  .navbar .logo{
+    pointer-events:auto;
+    line-height:1.15;
+  }
+  .navbar .logo .name{
+    display:block;
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:700;
+    font-size:clamp(14px,1.9vw,20px);
+    letter-spacing:0.04em;
+    color:#f6f1e4;
+    text-shadow:0 1px 3px rgba(0,0,0,0.55), 0 0 18px rgba(0,0,0,0.35);
+    white-space:nowrap;
+  }
+  .navbar .logo .role{
+    display:block;
+    margin-top:2px;
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:600;
+    font-size:clamp(7.5px,0.8vw,9px);
+    letter-spacing:0.14em;
+    color:#cda86a;
+    text-shadow:0 1px 3px rgba(0,0,0,0.55);
+    white-space:nowrap;
+  }
+
+  /* Tall wrapper controls how much scroll it takes to play the whole video */
+  .scroll-wrap{
+    position:relative;
+    height:400vh; /* increase for slower scrub, decrease for faster */
+  }
+
+  .sticky{
+    position:sticky;
+    top:0;
+    height:100vh;
+    width:100%;
+    overflow:hidden;
+  }
+
+  video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center 68%;
+  }
+
+  /* ---------- MOBILE VIDEO REPLACEMENT ---------- */
+  @media (max-width: 768px) {
+    video {
+      display: none;
+    }
+
+    .mobile-bg-image {
+      display: none !important;
+    }
+
+    /* Scroll-story heading/paragraph - BLACK on mobile only */
+    .story-item h2{
+      color:#000000 !important;
+      text-shadow:none !important;
+    }
+    .story-item p{
+      color:#000000 !important;
+      text-shadow:none !important;
+    }
+
+    /* Transparent header (logo text + hamburger bars) - on mobile only,
+       overriding the white transparent-header rule used on desktop */
+    header:not(.scrolled) .logo-name{
+      color:var(--plaster) !important;
+      text-shadow:none !important;
+    }
+    header:not(.scrolled) .logo-role{
+      color:var(--brass-bright) !important;
+      text-shadow:none !important;
+    }
+    header:not(.scrolled) .logo-nmls{
+      color:var(--plaster-dim) !important;
+      text-shadow:none !important;
+    }
+    header:not(.scrolled) .nav-toggle span{
+      background:#000000 !important;
+      box-shadow:none !important;
+    }
+
+    /* Mobile hero: show only the first heading/paragraph and remove the
+       multi-step scroll-scrub effect. The hero becomes a single 100vh
+       section, so continuing to scroll moves straight into the next
+       page section instead of paging through all the story steps. */
+    .scroll-wrap{
+      display:none !important;
+    }
+    .story-item{
+      display:none !important;
+    }
+    .story-item[data-index="0"]{
+      display:block !important;
+      position:relative !important;
+      opacity:1 !important;
+      transform:translateY(0) !important;
+    }
+
+  }
+
+  @media (min-width: 769px) {
+    .mobile-bg-image {
+      display: none;
+    }
+  }
+
+  /* ---------- SCROLL STORY (bottom-left) ---------- */
+  .story-overlay{
+    position:absolute;
+    left:clamp(20px,4vw,48px);
+    bottom:clamp(28px,6vh,64px);
+    z-index:40;
+    width:min(520px,86vw);
+    max-width:min(520px,86vw);
+    pointer-events:none;
+  }
+  .story-item{
+    position:absolute;
+    left:0;
+    bottom:0;
+    width:100%;
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity 0.6s ease, transform 0.6s ease;
+  }
+  .story-item.is-active{
+    position:relative;
+    opacity:1;
+    transform:translateY(0);
+  }
+  .story-item h2{
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:700;
+    font-size:clamp(22px,3.4vw,38px);
+    line-height:1.15;
+    color:#f6f1e4;
+    text-shadow:0 2px 10px rgba(0,0,0,0.55);
+    margin-bottom:12px;
+    opacity:0;
+    animation:storyFadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.2s both;
+  }
+  .story-item p{
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:400;
+    font-size:clamp(13px,1.4vw,16px);
+    line-height:1.55;
+    color:#e7e2d4;
+    text-shadow:0 1px 6px rgba(0,0,0,0.6);
+    opacity:0;
+    animation:storyFadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.4s both;
+  }
+  @keyframes storyFadeUp{
+    from{ opacity:0; transform:translateY(26px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .story-item h2, .story-item p{ animation:none; opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+
+
+<div class="scroll-wrap" id="scrollWrap">
+  <div class="sticky">
+    <div class="story-overlay" id="storyOverlay">
+      <div class="story-item is-active" data-index="0">
+        <h2>Not a lender.<br>Your advisor for finding the right one.</h2>
+        <p>I'm not selling one bank's rate sheet. As your independent broker, I compare 120+ lenders to find the loan that actually fits your income, goals, and timeline — no pressure, no guesswork.</p>
+      </div>
+      <div class="story-item" data-index="1">
+        <h2>120+ lenders.<br>One conversation.</h2>
+        <p>You don't need to shop banks one by one. I do the comparing — matching your situation against wholesale and retail lenders to find real fit, not just a headline rate.</p>
+      </div>
+      <div class="story-item" data-index="2">
+        <h2>Your goals<br>come first.</h2>
+        <p>First home, refinance, or investment property — the right loan depends on your timeline and plans, not a one-size-fits-all product.</p>
+      </div>
+      <div class="story-item" data-index="3">
+        <h2>No pressure.<br>Just clarity.</h2>
+        <p>I'll walk you through the numbers, the options, and the trade-offs so you can decide with confidence — on your schedule.</p>
+      </div>
+    </div>
+    <!-- Mobile fallback image (shown only on mobile, replaces video) -->
+    <img class="mobile-bg-image" src="https://images.pexels.com/photos/7735694/pexels-photo-7735694.jpeg" alt="Luxury House" loading="lazy">
+
+    <video id="video" muted playsinline preload="auto">
+      <source src="hero.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<script>
+(function(){
+  var wrap = document.getElementById('scrollWrap');
+  var video = document.getElementById('video');
+  var duration = 0;
+  var ready = false;
+
+  // ---------- Scroll story (bottom-left, 4 steps) ----------
+  var storyItems = document.querySelectorAll('.story-item');
+  var storyCount = storyItems.length;
+  var activeStoryIndex = 0;
+
+  var storyFadeOutStart = 0.94; // last stretch of scroll: hide the final card before the section ends
+
+  function updateStory(progress){
+    if (!storyCount) return;
+    var idx = (progress >= storyFadeOutStart) ? -1 : Math.min(storyCount - 1, Math.floor(progress * storyCount));
+    if (idx !== activeStoryIndex) {
+      activeStoryIndex = idx;
+      for (var i = 0; i < storyCount; i++) {
+        if (i === activeStoryIndex) {
+          storyItems[i].classList.add('is-active');
+        } else {
+          storyItems[i].classList.remove('is-active');
+        }
+      }
+    }
+  }
+
+  var targetProgress = 0;   // where scroll says we should be
+  var currentProgress = 0;  // where the video actually is (eased toward target)
+  var ease = 0.085;         // lower = smoother/slower catch-up, higher = snappier
+
+  video.addEventListener('loadedmetadata', function(){
+    duration = video.duration || 0;
+    ready = true;
+    video.currentTime = 0;
+  });
+
+  function computeTarget(){
+    var rect = wrap.getBoundingClientRect();
+    var total = wrap.offsetHeight - window.innerHeight;
+    var scrolled = -rect.top;
+    var progress = total > 0 ? scrolled / total : 0;
+    targetProgress = Math.max(0, Math.min(1, progress));
+  }
+
+  var lastSeekTime = -1;
+
+  function loop(){
+    computeTarget();
+    updateStory(targetProgress);
+
+    if (ready && duration) {
+      currentProgress += (targetProgress - currentProgress) * ease;
+      if (Math.abs(targetProgress - currentProgress) < 0.0008) {
+        currentProgress = targetProgress;
+      }
+
+      var safeMax = duration - Math.max(0.06, 1 / 24);
+      var t = Math.min(currentProgress * duration, safeMax);
+      if (currentProgress >= 0.999) t = safeMax;
+      if (currentProgress <= 0.001) t = 0;
+
+      if (Math.abs(video.currentTime - t) > 0.008) {
+        video.currentTime = t;
+        lastSeekTime = performance.now();
+      }
+
+      if (video.seeking && performance.now() - lastSeekTime > 400) {
+        try { video.currentTime = t; } catch(e){}
+        lastSeekTime = performance.now();
+      }
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', computeTarget);
+  computeTarget();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Houston Mortgage Broker | Robin Thomas — 120+ Lenders, FHA, VA & DSCR Loans</title>
+<meta name="description" content="Robin Thomas is an independent Houston-area mortgage broker comparing 120+ lenders to find your best rate — FHA, VA, DSCR, bank statement, first-time buyer, and refinance loans across Houston, Sugar Land, Katy, Cypress & more.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://robinthomasmb.com/">
+
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Robin Thomas Mortgage Broker">
+<meta property="og:title" content="Houston Mortgage Broker | Robin Thomas — 120+ Lenders, FHA, VA & DSCR Loans">
+<meta property="og:description" content="Not a lender — your independent advisor for finding the right one. Comparing 120+ lenders across the Houston Metro to match your income, goals, and timeline.">
+<meta property="og:url" content="https://robinthomasmb.com/">
+<meta property="og:image" content="https://images.pexels.com/photos/8112184/pexels-photo-8112184.jpeg">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Houston Mortgage Broker | Robin Thomas — 120+ Lenders, FHA, VA & DSCR Loans">
+<meta name="twitter:description" content="Independent Houston-area mortgage advisor comparing 120+ lenders for FHA, VA, DSCR, bank statement, first-time buyer, and refinance loans.">
+<meta name="twitter:image" content="https://images.pexels.com/photos/8112184/pexels-photo-8112184.jpeg">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FinancialService",
+  "name": "Robin Thomas Mortgage Broker",
+  "url": "https://robinthomasmb.com/",
+  "description": "Independent mortgage brokerage serving the Houston Metro area, comparing 120+ lenders for FHA, VA, DSCR, bank statement, first-time buyer, and refinance home loans.",
+  "areaServed": [
+    {"@type": "City", "name": "Houston"},
+    {"@type": "City", "name": "Sugar Land"},
+    {"@type": "City", "name": "Pearland"},
+    {"@type": "City", "name": "Missouri City"},
+    {"@type": "City", "name": "Stafford"},
+    {"@type": "City", "name": "Richmond"},
+    {"@type": "City", "name": "Katy"},
+    {"@type": "City", "name": "Rosenberg"},
+    {"@type": "City", "name": "Cypress"},
+    {"@type": "City", "name": "Spring"},
+    {"@type": "City", "name": "The Woodlands"},
+    {"@type": "City", "name": "Humble"},
+    {"@type": "City", "name": "League City"},
+    {"@type": "City", "name": "Pasadena"},
+    {"@type": "City", "name": "Conroe"},
+    {"@type": "City", "name": "Fulshear"}
+  ],
+  "employee": {
+    "@type": "Person",
+    "name": "Robin Thomas",
+    "jobTitle": "Mortgage Broker & Advisor",
+    "identifier": {
+      "@type": "PropertyValue",
+      "name": "NMLS ID",
+      "value": "2453986"
+    }
+  },
+  "parentOrganization": {
+    "@type": "Organization",
+    "name": "Edge Home Finance, LLC",
+    "identifier": {
+      "@type": "PropertyValue",
+      "name": "Company NMLS ID",
+      "value": "891464"
+    }
+  },
+  "makesOffer": [
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "FHA Loans"}},
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "VA Loans"}},
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "DSCR Loans"}},
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Bank Statement Loans"}},
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "First-Time Buyer Loans"}},
+    {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Refinancing"}}
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root{
+    --obsidian:#ffffff;
+    --plaster:#171512;
+    --plaster-dim:#5c574c;
+    --brass:#ab8552;
+    --brass-bright:#8a6a3f;
+    --hair: rgba(23,21,18,0.1);
+    --cream: #faf8f4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{ scroll-behavior:smooth; overflow-x:hidden; }
+  html,body{ height:100%; }
+  body{
+    background:var(--obsidian);
+    color:var(--plaster);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--brass); color:#fff; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+  img{ max-width:100%; display:block; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  :focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+
+  .container{ max-width:1180px; margin:0 auto; padding:0 48px; }
+  @media (max-width:700px){ .container{ padding:0 24px; } }
+
+  .hero .container{ max-width:none; margin:0; padding:0; }
+
+  .eyebrow-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass-bright);
+    margin-bottom:14px;
+    display:block;
+  }
+
+  h1.display, h2.display{
+    font-family:'Fraunces', serif;
+    font-weight:300;
+    letter-spacing:-0.01em;
+    color:var(--plaster);
+  }
+  h1.display{ font-size:clamp(28px, 3.2vw, 48px); line-height:1.35; padding-bottom:12px; max-width:700px; }
+  h2.display{ font-size:clamp(26px, 3.4vw, 42px); line-height:1.12; }
+  h1.display em, h2.display em{ font-style:normal; color:inherit; font-weight:inherit; }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:15px 26px; border-radius:3px;
+    transition:all 0.25s ease; border:1px solid transparent;
+  }
+  .btn-primary{ background:var(--plaster); color:#fff; }
+  .btn-primary:hover{ background:var(--brass-bright); }
+  .btn-secondary{ background:transparent; color:var(--plaster); border-color:var(--hair); }
+  .btn-secondary:hover{ border-color:var(--plaster); }
+  .btn-row{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+
+  /* Apply Now button (nav bar) */
+  .btn-apply{
+    background:#c9a06c;
+    color:#1a1a1a;
+    font-weight:700;
+    border:1px solid #c9a06c;
+    padding:12px 35px;
+    font-size:11px;
+  }
+  .btn-apply:hover{
+    background:#b98f58;
+    border-color:#b98f58;
+    color:#1a1a1a;
+  }
+  /* Over the hero video (header transparent): transparent button with light outline */
+  header:not(.scrolled) .btn-apply{
+    background:transparent;
+    color:#ffffff;
+    border:1px solid #ffffff;
+    text-shadow:0 1px 4px rgba(0,0,0,0.55);
+  }
+  header:not(.scrolled) .btn-apply:hover{
+    background:rgba(255,255,255,0.12);
+    border-color:#ffffff;
+    color:#ffffff;
+  }
+  /* Once scrolled (white nav bar): solid tan button */
+  header.scrolled .btn-apply{
+    background:#c9a06c;
+    color:#1a1a1a;
+    border-color:#c9a06c;
+    text-shadow:none;
+  }
+  header.scrolled .btn-apply:hover{
+    background:#b98f58;
+    border-color:#b98f58;
+    color:#1a1a1a;
+  }
+  .mobile-nav-apply{
+    display:flex;
+    justify-content:center;
+    margin-top:12px;
+  }
+
+  /* ---------- header & navigation ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0;
+    z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 48px;
+    background:transparent;
+    border-bottom:1px solid transparent;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transition:border-color 0.3s, background 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+  }
+  header.visible{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+  }
+  header.scrolled{
+    background:rgba(255,255,255,0.94);
+    backdrop-filter:blur(10px);
+    border-bottom-color:var(--hair);
+  }
+  @media (max-width:700px){ header{ padding:20px 24px; } }
+
+  .left-cluster{ display:flex; align-items:center; gap:44px; }
+
+  .logo-block{ display:flex; flex-direction:column; line-height:1; }
+  .logo-block .logo-name{
+    font-family:'Fraunces', serif; font-weight:700; font-size:19px;
+    letter-spacing:0.01em; color:var(--plaster); text-transform:uppercase;
+    transition:color 0.3s ease, text-shadow 0.3s ease;
+  }
+  .logo-block .logo-name + .logo-name{ margin-top:2px; }
+  .logo-block .logo-role{
+    margin-top:7px; font-family:'IBM Plex Mono', monospace; font-size:9px;
+    font-weight:500; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--brass-bright); max-width:150px; line-height:1.3;
+    transition:color 0.3s ease, text-shadow 0.3s ease;
+  }
+  .logo-block .logo-nmls{
+    margin-top:4px; font-family:'IBM Plex Mono', monospace; font-size:9px;
+    font-weight:500; letter-spacing:0.04em; color:var(--plaster-dim);
+    transition:color 0.3s ease, text-shadow 0.3s ease;
+  }
+
+  /* Navigation Styles */
+  .nav-menu{ display:flex; gap:40px; align-items:center; }
+  .nav-item{ position:relative; }
+  
+  .nav-link{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:#000; opacity:0.75; transition:opacity 0.3s, color 0.3s ease; font-family:'IBM Plex Mono', monospace;
+    display:flex; align-items:center; gap:6px;
+    padding:8px 0;
+  }
+  .nav-link:hover{ opacity:1; }
+
+  .nav-arrow{
+    width:0; height:0;
+    border-left:3px solid transparent;
+    border-right:3px solid transparent;
+    border-top:4px solid currentColor;
+    transition:transform 0.3s;
+  }
+
+  .nav-item.dropdown-parent:hover .nav-arrow{ transform:rotate(180deg); }
+
+  /* Dropdown Menu */
+  .dropdown-menu{
+    position:absolute; top:100%; left:0; margin-top:12px;
+    background:var(--obsidian); border:1px solid var(--hair);
+    border-radius:4px; box-shadow:0 8px 24px rgba(0,0,0,0.08);
+    min-width:200px; opacity:0; visibility:hidden;
+    transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+    transform:translateY(-10px);
+    z-index:100;
+  }
+
+  .nav-item.dropdown-parent:hover .dropdown-menu{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+
+  .dropdown-menu a{
+    display:block; padding:12px 20px;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--plaster); opacity:0.75;
+    transition:all 0.2s;
+  }
+
+  .dropdown-menu a:hover{
+    opacity:1; background:var(--cream);
+  }
+
+  .dropdown-menu a:first-child{ padding-top:16px; }
+  .dropdown-menu a:last-child{ padding-bottom:16px; }
+
+  .header-cta{ margin-left:auto; }
+
+  @media (max-width:980px){ 
+    .nav-menu{ display:none; } 
+    .header-cta{ display:none; }
+  }
+
+  /* ---------- mobile nav toggle (hamburger) ---------- */
+  .nav-toggle{
+    display:none;
+    flex-direction:column; justify-content:center; align-items:flex-end; gap:5px;
+    width:32px; height:32px; background:transparent; border:none; padding:0;
+    position:relative; z-index:60; flex-shrink:0;
+  }
+  .nav-toggle span{
+    display:block; width:100%; height:2px; background:var(--plaster); border-radius:2px;
+    transition:transform 0.3s ease, opacity 0.2s ease, width 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .nav-toggle span:nth-child(2){ width:70%; }
+  .nav-toggle.is-open span{ width:100%; }
+  .nav-toggle.is-open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .nav-toggle.is-open span:nth-child(2){ opacity:0; }
+  .nav-toggle.is-open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  @media (max-width:980px){
+    .nav-toggle{ display:flex; }
+  }
+
+  /* ---------- transparent header over the hero animation: white text ----------
+     While header hasn't been scrolled yet it sits transparent, directly over
+     the dark hero video/image, so the logo text, desktop nav links, and the
+     hamburger bars all switch to white for readability - on mobile AND desktop.
+     Once scrolled (header gets its white/blurred background) everything
+     reverts automatically to its normal dark color. */
+  header:not(.scrolled) .logo-name,
+  header:not(.scrolled) .logo-role,
+  header:not(.scrolled) .logo-nmls{
+    color:#ffffff;
+    text-shadow:0 1px 4px rgba(0,0,0,0.55), 0 0 16px rgba(0,0,0,0.35);
+  }
+  header:not(.scrolled) .nav-link{
+    color:#ffffff;
+    opacity:0.92;
+  }
+  header:not(.scrolled) .nav-link:hover{ opacity:1; }
+  header:not(.scrolled) .nav-toggle span{
+    background:#ffffff;
+    box-shadow:0 1px 4px rgba(0,0,0,0.55);
+  }
+
+  /* ---------- mobile nav panel ---------- */
+  .mobile-nav-overlay{
+    position:fixed; inset:0; z-index:54;
+    background:rgba(23,21,18,0.45);
+    opacity:0; visibility:hidden; transition:opacity 0.3s ease;
+  }
+  .mobile-nav-overlay.is-open{ opacity:1; visibility:visible; }
+
+  .mobile-nav{
+    position:fixed; top:0; right:0; bottom:0; z-index:55;
+    width:min(320px, 84vw); max-width:100%;
+    background:#ffffff;
+    box-shadow:-10px 0 32px rgba(23,21,18,0.12);
+    transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:100px 28px 40px;
+  }
+  .mobile-nav.is-open{ transform:translateX(0); }
+
+  .mobile-nav-link{
+    display:block; padding:16px 0;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--plaster);
+  }
+
+  
+  .mobile-nav-item-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 0; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--plaster);
+  }
+  .mobile-nav-arrow{
+    width:8px; height:8px; flex-shrink:0;
+    border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
+    transform:rotate(45deg); transition:transform 0.25s ease;
+  }
+  .mobile-nav-item.is-open .mobile-nav-arrow{ transform:rotate(-135deg); }
+
+  .mobile-nav-submenu{ max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+  .mobile-nav-item.is-open .mobile-nav-submenu{ max-height:400px; }
+  .mobile-nav-submenu a{
+    display:block; padding:11px 0 11px 14px;
+    font-family:'Inter', sans-serif; font-size:13.5px; color:var(--plaster-dim);
+  }
+  .mobile-nav-submenu a:hover{ color:var(--plaster); }
+
+  body.nav-open{ overflow:hidden; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative; height:100svh; min-height:640px;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0; overflow:hidden; background:var(--obsidian);
+  }
+  @media (max-width:700px){ .hero{ padding:0; } }
+  .hero-bg{ position:absolute; inset:0; z-index:0; }
+  .hero-bg img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity 0.6s ease;
+  }
+  .hero-bg img.is-active{ opacity:1; }
+  .hero-bg img.hero-bg-animated{
+    transform-origin:50% 50%;
+  }
+  
+  @media (prefers-reduced-motion:reduce){
+    .hero-bg img.hero-bg-animated{ animation:none; }
+  }
+  .hero-bg-overlay{ position:absolute; inset:0; z-index:1; background:rgba(0,0,0,0.55); }
+  .hero-content{ position:relative; z-index:2; width:100%; }
+  .hero-text{ max-width:660px; margin-top:0; margin-left:0; padding-left:48px; }
+  @media (max-width:700px){ .hero-text{ padding-left:24px; } }
+  .hero-sub p{ max-width:460px; font-size:15px; color:rgba(255,255,255,0.82); line-height:1.7; margin-top:18px; }
+  .hero .eyebrow-label{ color:#e8c99a; }
+  .hero h1.display{ color:#ffffff; }
+  .hero-actions{ margin-top:32px; display:block; }
+
+  .reveal{ opacity:0; transform:translateY(28px); animation:rise 1s cubic-bezier(.16,1,.3,1) forwards; }
+  .reveal.d1{ animation-delay:0.15s; }
+  .reveal.d2{ animation-delay:0.3s; }
+  .reveal.d3{ animation-delay:0.45s; }
+  .reveal.d4{ animation-delay:0.6s; }
+  .hero-cta{ display:inline-block; margin-top:28px; text-decoration:none; }
+  
+  /* Hero logos bottom right - fade up on scroll */
+  .hero-logos-badge{ position:absolute; bottom:48px; right:48px; z-index:3; display:flex; gap:16px; align-items:flex-end; opacity:0; transform:translateY(40px); transition:opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1); }
+  .hero-logos-badge.in-view{ opacity:1; transform:translateY(0); }
+  .hero-logo-item{ background:#fff; padding:14px 16px; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .hero-logo-item img{ height:50px; width:auto; max-width:110px; object-fit:contain; margin-bottom:10px; }
+  .hero-logo-name{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:var(--plaster); font-weight:600; text-align:center; line-height:1.4; }
+  @media (max-width:700px){ 
+    .hero-logos-badge{ bottom:24px; right:24px; gap:12px; }
+    .hero-logo-item{ padding:11px 12px; }
+    .hero-logo-item img{ height:40px; margin-bottom:7px; }
+    .hero-logo-name{ font-size:8px; line-height:1.3; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hero-logos-badge{ opacity:1; transform:none; transition:none; }
+  }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .char-word{ display:inline-block; white-space:nowrap; }
+  .char-mask{ display:inline-block; overflow-x:visible; overflow-y:hidden; vertical-align:bottom; line-height:1.05; padding-bottom:0.28em; margin-bottom:-0.28em; }
+  .char-mask .char{ display:inline-block; transform:translateY(-110%); opacity:0; animation:charSlideDown 0.9s cubic-bezier(.16,1,.3,1) forwards; will-change:transform, opacity; }
+  .char-space{ display:inline-block; width:0.28em; }
+  @keyframes charSlideDown{ to{ transform:translateY(0); opacity:1; } }
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{ animation:none; opacity:1; transform:none; }
+    .char-mask .char{ animation:none; opacity:1; transform:none; }
+  }
+
+  /* ---------- shared section scaffolding ---------- */
+  .section{ padding:96px 0; }
+  @media (max-width:700px){ .section{ padding:64px 0; } }
+  .section-head{ max-width:620px; margin-bottom:56px; }
+  @media (max-width:700px){ .section-head{ margin-bottom:36px; } }
+  p.lede{ margin-top:16px; font-size:15px; color:var(--plaster-dim); line-height:1.7; max-width:480px; }
+  .section-alt{ background:var(--cream); }
+  .section-rule{ border-top:1px solid var(--hair); }
+
+  /* ---------- trust bar ---------- */
+  .trust-bar{ padding:40px 0; background:#000; }
+  .trust-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; text-align:left; align-items:start; }
+  @media (max-width:820px){ .trust-grid{ grid-template-columns:repeat(2,1fr); row-gap:28px; } }
+  .trust-item .trust-figure{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(20px,2.1vw,26px); color:#fff; line-height:1; white-space:nowrap; }
+  .trust-item .trust-figure.trust-figure-nmls{ font-size:clamp(20px,2.1vw,26px); }
+  @media (max-width:480px){ .trust-item .trust-figure.trust-figure-nmls{ font-size:18px; } }
+  .trust-item .trust-label{ margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:#a8a49a; }
+
+  /* ---------- loan programs ---------- */
+  .program-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  @media (max-width:820px){ .program-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .program-grid{ grid-template-columns:1fr; } }
+  .program-card{ background:var(--obsidian); padding:36px 32px; display:flex; flex-direction:column; border:1px solid var(--hair); border-radius:4px; transition:background 0.25s, border-color 0.25s, box-shadow 0.25s; }
+  .program-card:hover{ background:var(--cream); border-color:var(--brass); box-shadow:0 8px 24px rgba(23,21,18,0.06); }
+  .program-card .program-index{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--brass-bright); margin-bottom:18px; }
+  .program-card h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:10px; color:var(--plaster); }
+  .program-card p{ font-size:13.5px; line-height:1.65; color:var(--plaster-dim); flex-grow:1; }
+  .program-card .program-link{ margin-top:20px; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--plaster); display:inline-flex; align-items:center; gap:6px; }
+  .program-card .program-link span{ transition:transform 0.25s; }
+  .program-card:hover .program-link span{ transform:translateX(4px); }
+
+  /* ---------- loan programs: pinned horizontal-scroll gallery ---------- */
+  .programs-scroll{ position:relative; background:var(--obsidian); }
+  .programs-pin{
+    height:100vh; min-height:520px;
+    display:flex; flex-direction:column;
+    padding-top:96px; padding-bottom:28px;
+    overflow:hidden;
+  }
+  .programs-pin .section-head{ padding:0 48px; margin-bottom:24px; flex-shrink:0; }
+  .program-track{
+    flex:1 1 auto; min-height:0;
+    display:flex; align-items:flex-start; gap:20px; padding:0 48px;
+    will-change:transform;
+  }
+  .program-track .program-card{
+    flex:0 0 300px; width:300px; height:auto;
+    padding:32px 28px; justify-content:flex-start; overflow:hidden;
+  }
+  .program-track .program-card .program-link{ margin-top:24px; }
+  .program-progress-track{
+    margin:20px 48px 0; height:2px; background:var(--hair); border-radius:2px; overflow:hidden; flex-shrink:0;
+  }
+  .program-progress-fill{
+    height:100%; width:0%; background:var(--brass); border-radius:2px;
+    transform-origin:left center; transition:width 0.05s linear;
+  }
+  @media (max-width:700px){
+    .programs-pin .section-head{ padding:0 24px; }
+    .program-track{ padding:0 24px; gap:16px; }
+    .program-track .program-card{ flex-basis:260px; width:260px; padding:24px 20px; }
+    .program-progress-track{ margin:16px 24px 0; }
+  }
+  /* Below the pin breakpoint, the fallback is native swipe scroll, so hide the JS-driven progress line */
+  @media (max-width:899px){
+    .program-progress-track{ display:none; }
+  }
+  /* Below the pin breakpoint, fall back to a plain swipeable row — no JS pinning */
+  @media (max-width:899px){
+    .programs-pin{ height:auto; padding:96px 0; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
+    .program-track{ transform:none !important; }
+    .program-track .program-card{ height:auto; min-height:380px; scroll-snap-align:start; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .programs-pin{ height:auto; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .program-track{ transform:none !important; }
+  }
+
+  /* Mobile only: stack Loan Program cards one below another, no horizontal slide */
+  @media (max-width:700px){
+    .programs-pin{ overflow-x:visible; }
+    .program-track{
+      flex-direction:column;
+      overflow-x:visible;
+      scroll-snap-type:none;
+      gap:16px;
+    }
+    .program-track .program-card{
+      flex:1 1 auto;
+      width:100%;
+      min-height:auto;
+      scroll-snap-align:none;
+    }
+  }
+
+  /* ---------- why choose us (pinned, scroll-revealed) ---------- */
+  .whyus-pin-section{
+    position:relative;
+    background:
+      linear-gradient(rgba(250,248,244,0.90), rgba(250,248,244,0.90)),
+      url('https://images.pexels.com/photos/8482520/pexels-photo-8482520.jpeg');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .whyus-pin{
+    height:100svh; min-height:560px; overflow:hidden;
+    display:flex; align-items:flex-start;
+    padding-top:132px; padding-bottom:28px; box-sizing:border-box;
+  }
+  .whyus-wrap{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:start; width:100%; }
+  @media (max-width:820px){ .whyus-wrap{ grid-template-columns:1fr; gap:28px; } }
+  .whyus-wrap .section-head{ margin-bottom:0; }
+  .whyus-wrap .section-head h2.display{ font-size:clamp(22px, 2.6vw, 34px); line-height:1.2; }
+  .whyus-wrap .section-head p.lede{ margin-top:12px; font-size:13.5px; line-height:1.6; }
+  .whyus-brand-badge{ margin-top:20px; display:flex; align-items:center; gap:20px; }
+  .whyus-brand-badge img{ width:210px; height:auto; max-height:135px; object-fit:contain; display:block; background:#fff; padding:18px 24px; border-radius:6px; }
+  .whyus-brand-badge .whyus-brand-name{ font-family:'Fraunces', serif; font-size:17px; font-weight:600; letter-spacing:0.02em; color:var(--plaster); line-height:1.3; }
+  @media (max-width:700px){ .whyus-brand-badge{ margin-top:16px; gap:12px; } .whyus-brand-badge img{ width:165px; max-height:120px; object-fit:contain; background:#fff; padding:14px 18px; border-radius:4px; } .whyus-brand-badge .whyus-brand-name{ font-size:15px; } }
+
+  .whyus-list{ display:flex; flex-direction:column; }
+  .whyus-item{
+    padding:12px 0;
+    display:flex; gap:18px; align-items:flex-start;
+    opacity:0; transform:translateY(20px);
+  }
+  .whyus-item .whyus-index{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--brass-bright); padding-top:3px; flex-shrink:0; }
+  .whyus-item h3{ font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin-bottom:5px; color:var(--plaster); }
+  .whyus-item p{ font-size:13px; line-height:1.55; color:var(--plaster-dim); max-width:440px; }
+
+  .whyus-progress-track{ display:flex; gap:8px; margin-top:22px; }
+  .whyus-progress-dot{ width:28px; height:2px; background:var(--hair); border-radius:2px; overflow:hidden; position:relative; }
+  .whyus-progress-dot .fill{ position:absolute; inset:0; background:var(--brass); width:0%; transition:width 0.05s linear; }
+
+  @media (max-width:820px){
+    /* Below the pin breakpoint: plain stacked list, no pin/scrub */
+    .whyus-pin{ height:auto; padding:64px 0 64px; }
+    .whyus-item{ opacity:1; transform:none; padding:16px 0; border-top:1px solid var(--hair); }
+    .whyus-item:last-child{ border-bottom:1px solid var(--hair); }
+    .whyus-progress-track{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .whyus-item{ opacity:1; transform:none; }
+    .whyus-progress-track{ display:none; }
+  }
+
+  /* ---------- service areas ---------- */
+  /* Pinned in place while CTA banner slides over it (GSAP ScrollTrigger, JS-driven). Needs its own
+     stacking context so it stays beneath the CTA banner (z-index:2) once GSAP switches it to fixed. */
+  .areas-bg{ position:relative; z-index:1; }
+  .areas-wrap{ display:flex; flex-direction:column; gap:22px; }
+  .areas-wrap h2.display{ font-size:clamp(22px, 2.6vw, 32px); line-height:1.15; }
+  .areas-wrap p.lede{ margin-top:8px; font-size:13.5px; line-height:1.55; }
+  #areasSection .container{ max-width:1360px; }
+  .areas-list{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; list-style:none; }
+  @media (max-width:1080px){ .areas-list{ grid-template-columns:repeat(3, 1fr); } }
+  @media (max-width:820px){ .areas-list{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:520px){ .areas-list{ grid-template-columns:1fr; } }
+  .areas-list li{
+    display:flex; align-items:center; gap:7px;
+    padding:10px 12px; border:1px solid var(--hair); border-radius:8px;
+    background:var(--cream); transition:background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+    min-width:0;
+  }
+  .areas-list li:hover{ background:#fff; border-color:var(--brass); transform:translateY(-2px); }
+  .areas-list li svg{ flex:0 0 auto; width:14px; height:14px; color:var(--brass-bright); }
+  .areas-list li .area-name{ font-family:'Inter', sans-serif; font-weight:600; font-size:12.5px; line-height:1.3; color:var(--plaster-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .areas-list li .area-tag{ font-family:'Inter', sans-serif; font-weight:600; font-size:12.5px; color:var(--plaster-dim); }
+
+  /* Fit this section's content to a single screen instead of stacking large section padding */
+  .section-fit{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:100px 0 36px; }
+  @media (max-width:700px){ .section-fit{ min-height:auto; padding:100px 0 40px; } }
+
+  /* ---------- section fade-up on scroll ---------- */
+  .fade-up-section{ opacity:0; transform:translateY(36px); transition:opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1); }
+  .fade-up-section.in-view{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion:reduce){
+    .fade-up-section{ opacity:1; transform:none; transition:none; }
+  }
+
+  .areas-bg{
+    position:relative;
+    background:var(--cream);
+  }
+
+  /* ---------- affiliate / edge home finance ---------- */
+  .affiliate-section{
+    background:var(--obsidian);
+    position:relative;
+    overflow:hidden;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:110px 0 60px;
+  }
+  @media (max-width:700px){
+    .affiliate-section{ min-height:auto; padding:64px 0; }
+  }
+  .affiliate-section::before{
+    content:"";
+    position:absolute;
+    top:50%;
+    right:-6%;
+    width:640px;
+    height:640px;
+    transform:translateY(-50%);
+    background-image:url('Finance.png');
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:contain;
+    opacity:0.13;
+    filter:grayscale(1) brightness(2);
+    pointer-events:none;
+  }
+  .affiliate-section .container{ position:relative; z-index:1; }
+  .affiliate-wrap{
+    display:grid;
+    grid-template-columns:0.85fr 1.15fr;
+    gap:64px;
+    align-items:center;
+  }
+  @media (max-width:820px){
+    .affiliate-wrap{ grid-template-columns:1fr; gap:32px; }
+    .affiliate-section::before{ width:420px; height:420px; right:-12%; opacity:0.11; }
+  }
+  @media (max-width:700px){
+    .affiliate-section::before{ width:320px; height:320px; }
+  }
+  .affiliate-brand-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:22px;
+    gap:16px;
+  }
+  .affiliate-brand-badge img{
+    display:block;
+    width:220px;
+    max-width:100%;
+    height:auto;
+    max-height:140px;
+    object-fit:contain;
+    background:#fff;
+    padding:20px 26px;
+    border-radius:8px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.18);
+  }
+  .affiliate-powered-by{
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--plaster-dim);
+  }
+  @media (max-width:700px){
+    .affiliate-brand-badge{ margin-top:18px; gap:12px; }
+    .affiliate-brand-badge img{ width:175px; max-height:125px; object-fit:contain; background:#fff; padding:16px 20px; border-radius:6px; }
+    .affiliate-powered-by{ font-size:10px; }
+  }
+  .affiliate-logo{ margin-bottom:22px; line-height:1.15; }
+  .affiliate-logo .name{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(19px,4.6vw,26px);
+    letter-spacing:0.01em;
+    color:var(--plaster);
+    white-space:nowrap;
+  }
+  .affiliate-logo .role{
+    display:block;
+    margin-top:5px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass-bright);
+  }
+  .affiliate-left h2.display{ font-size:clamp(22px, 2.6vw, 34px); line-height:1.2; }
+  .affiliate-left p.lede{ margin-top:12px; font-size:13.5px; line-height:1.6; max-width:440px; }
+  .affiliate-right p{ font-size:15px; line-height:1.75; color:var(--plaster-dim); margin-bottom:16px; max-width:560px; }
+  .affiliate-right p:last-of-type{ margin-bottom:0; }
+  .affiliate-link{
+    display:inline-flex; align-items:center; gap:6px; margin-top:18px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--plaster); text-decoration:none;
+    border-bottom:1px solid var(--hair); padding-bottom:2px;
+    transition:color 0.2s ease, border-color 0.2s ease;
+  }
+  .affiliate-link:hover{ color:var(--brass-bright); border-color:var(--brass); }
+  @media (max-width:700px){
+    .affiliate-logo .name{ font-size:clamp(17px,5.4vw,19px); }
+    .affiliate-right p{ font-size:14px; max-width:none; }
+  }
+
+  /* ---------- about teaser ---------- */
+  .about-teaser{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:64px; align-items:center; }
+  @media (max-width:820px){ .about-teaser{ grid-template-columns:1fr; gap:32px; } }
+  .about-portrait{ aspect-ratio:4/5; background:var(--cream); border:1px solid var(--hair); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--plaster-dim); }
+  .about-copy p{ font-size:15px; line-height:1.75; color:var(--plaster-dim); margin-bottom:16px; max-width:520px; }
+  .about-copy .btn-row-static{ display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }
+
+  /* ---------- process ---------- */
+  .process-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:48px; }
+  @media (max-width:820px){ .process-grid{ grid-template-columns:1fr; gap:36px; } }
+  .process-step .process-index{ font-family:'Fraunces', serif; font-size:15px; color:var(--brass-bright); border:1px solid var(--brass); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+  .process-step h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:10px; }
+  .process-step p{ font-size:13.5px; line-height:1.65; color:var(--plaster-dim); max-width:280px; }
+
+  /* ---------- testimonials ---------- */
+  .testimonial-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--hair); border:1px solid var(--hair); }
+  @media (max-width:820px){ .testimonial-grid{ grid-template-columns:1fr; } }
+  .testimonial-card{ background:var(--obsidian); padding:40px; }
+  .testimonial-card .stars{ font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.1em; color:var(--brass); margin-bottom:18px; }
+  .testimonial-card blockquote{ font-family:'Fraunces', serif; font-weight:400; font-size:18px; line-height:1.5; color:var(--plaster); margin-bottom:20px; }
+  .testimonial-card .testimonial-attr{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--plaster-dim); }
+
+  /* ---------- CTA banner ---------- */
+  .cta-banner{
+    position:relative; z-index:2;
+    padding:80px 0; text-align:center; min-height:100svh; display:flex; align-items:center;
+    background:
+      linear-gradient(rgba(10,9,8,0.4), rgba(10,9,8,0.48)),
+      url('https://images.unsplash.com/photo-1746041890750-4b277f7bf88b?w=1920&auto=format&fit=crop&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDd8fHxlbnwwfHx8fHw%3D');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .cta-banner .container{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  .cta-banner .eyebrow-label{ color:var(--brass); }
+  .cta-banner h2.display{ max-width:640px; color:#ffffff; }
+  .cta-banner p.lede{ margin:0 auto; max-width:560px; color:rgba(255,255,255,0.72); }
+  .cta-banner .btn-row-static{ display:flex; gap:16px; margin-top:32px; flex-wrap:wrap; justify-content:center; }
+  @media (max-width:700px){ .cta-banner{ min-height:auto; padding:80px 0; } }
+
+  /* ---------- light-beam button (rotating gradient border) ---------- */
+  @property --gradient-angle{
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes border-spin{
+    from{ --gradient-angle: 0deg; }
+    to{ --gradient-angle: 360deg; }
+  }
+  .btn-lightbeam{
+    position:relative; isolation:isolate; display:inline-flex;
+    border-radius:999px; padding:1.5px;
+    background: conic-gradient(from var(--gradient-angle), transparent 0%, var(--brass) 38%, var(--brass-bright) 50%, transparent 62%, transparent 100%);
+    animation: border-spin 2.4s linear infinite;
+    box-shadow:0 0 24px -8px rgba(171,133,82,0.45);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  .btn-lightbeam:hover{ box-shadow:0 0 32px -6px rgba(171,133,82,0.6); transform:translateY(-1px); }
+  .btn-lightbeam:active{ transform:translateY(0) scale(0.98); }
+  .btn-lightbeam-inner{
+    position:relative; z-index:1; overflow:hidden;
+    display:inline-flex; align-items:center; gap:8px;
+    background:#ffffff;
+    color:#171512;
+    padding:15px 34px; border-radius:999px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    transition:background 0.3s ease;
+  }
+  .btn-lightbeam:hover .btn-lightbeam-inner{ background:#f5f0e8; }
+  .btn-lightbeam-inner::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 0%, rgba(171,133,82,0.18) 0%, transparent 65%);
+    opacity:0; transition:opacity 0.4s ease; pointer-events:none;
+  }
+  .btn-lightbeam:hover .btn-lightbeam-inner::after{ opacity:1; }
+  @media (prefers-reduced-motion:reduce){
+    .btn-lightbeam{ animation:none; }
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    margin-top:0; padding:72px 48px 40px; background:var(--cream); color:var(--plaster); border-top:1px solid var(--hair);
+  }
+  @media (max-width:700px){ footer{ padding:48px 24px 32px; } }
+
+  .footer-grid{
+    display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:48px 60px;
+    margin-bottom:48px;
+  }
+  @media (max-width:820px){
+    .footer-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .footer-grid{ grid-template-columns:1fr; }
+  }
+
+  .footer-brand-name{ font-family:'Fraunces', serif; font-weight:600; font-size:26px; letter-spacing:0.01em; color:var(--plaster); text-transform:uppercase; }
+  .footer-brand-role{ display:block; margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--brass-bright); }
+  .footer-brand-desc{ margin-top:20px; font-size:14px; line-height:1.75; color:var(--plaster-dim); max-width:300px; }
+
+  .footer-divider{ margin:28px 0 24px; border-top:1px solid var(--hair); }
+
+  .footer-powered-full{ grid-column:1 / -1; }
+  .footer-powered-row{ display:flex; flex-wrap:wrap; align-items:center; gap:28px 40px; margin-top:4px; }
+  .footer-powered{ display:flex; align-items:center; gap:14px; }
+  .edge-badge{
+    flex-shrink:0; width:160px; height:76px;
+    background:#fff; border:1px solid var(--hair); border-radius:6px;
+    box-shadow:0 2px 10px rgba(23,21,18,0.06);
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    padding:4px 8px;
+  }
+  .edge-badge img{ width:120%; height:120%; object-fit:contain; }
+  .snm-badge{
+    flex-shrink:0; width:160px; height:76px;
+    background:#fff; border:1px solid var(--hair); border-radius:6px;
+    box-shadow:0 2px 10px rgba(23,21,18,0.06);
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    padding:4px 8px;
+  }
+  .snm-badge img{ width:120%; height:120%; object-fit:contain; }
+
+  .footer-powered-text{ line-height:1.4; }
+  .footer-powered-title{ font-family:'Inter', sans-serif; font-weight:600; font-size:12px; color:var(--brass-bright); }
+  .footer-powered-nmls{ margin-top:2px; font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:0.04em; color:var(--plaster-dim); text-transform:uppercase; }
+
+  .footer-col h4{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--brass-bright); margin-bottom:22px; }
+  .footer-col ul li{ margin-bottom:14px; }
+  .footer-col a{ font-size:14.5px; color:var(--plaster-dim); transition:color 0.2s; }
+  .footer-col a:hover{ color:var(--plaster); }
+
+  .footer-compliance-text{ font-size:13px; line-height:1.75; color:var(--plaster-dim); margin-bottom:18px; max-width:280px; }
+
+  .footer-bottom{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--plaster-dim);
+    padding-top:28px; border-top:1px solid var(--hair);
+  }
+  .footer-legal-links{ display:flex; gap:32px; align-items:center; }
+  @media (max-width:560px){
+    .footer-bottom{ flex-direction:column; gap:16px; text-align:left; align-items:flex-start; }
+    .footer-legal-links{ flex-direction:column; gap:12px; align-items:flex-start; }
+  }
+  .footer-bottom a{ color:var(--plaster-dim); }
+  .footer-bottom a:hover{ color:var(--plaster); }
+
+  .footer-legal{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.08em; }
+</style>
+</head>
+<body>
+
+<!-- HEADER & NAVIGATION -->
+<header id="siteHeader">
+  <div class="left-cluster">
+    <div class="logo-block">
+      <span class="logo-name">Robin Thomas</span>
+      <span class="logo-role">Mortgage Broker & Advisor</span>
+      <span class="logo-nmls">NMLS #2453986</span>
+    </div>
+
+    <!-- Multi-Page Navigation with Dropdowns -->
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <a href="#heroSection" class="nav-link" aria-current="page">Home</a>
+      </div>
+      <div class="nav-item">
+        <a href="about.html" class="nav-link">About</a>
+      </div>
+
+      <!-- Loan Programs Dropdown -->
+      <div class="nav-item dropdown-parent">
+        <a class="nav-link">
+          Loan Programs
+          <span class="nav-arrow"></span>
+        </a>
+        <div class="dropdown-menu">
+          <a href="loan-fha.html">FHA Loans</a>
+          <a href="loan-va.html">VA Loans</a>
+          <a href="loan-dscr.html">DSCR Loans</a>
+          <a href="loan-bank-statement.html">Bank Statement Loans</a>
+          <a href="loan-first-time-buyers.html">First-Time Buyers</a>
+          <a href="loan-refinancing.html">Refinancing</a>
+        </div>
+      </div>
+
+      <!-- Resources Dropdown -->
+      <div class="nav-item dropdown-parent">
+        <a class="nav-link">
+          Resources
+          <span class="nav-arrow"></span>
+        </a>
+        <div class="dropdown-menu">
+          <a href="resources-insights.html">Mortgage Insights</a>
+          <a href="calculator.html">Mortgage Calculator</a>
+          
+        </div>
+      </div>
+
+      <div class="nav-item">
+        <a href="contact.html" class="nav-link">Contact</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Apply Now CTA -->
+  <div class="header-cta">
+    <a href="https://edge.my1003app.com/2453986/register?time=1780521146594" class="btn btn-apply" target="_blank" rel="noopener">Apply Now</a>
+  </div>
+
+  <!-- Mobile hamburger toggle -->
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- Mobile nav overlay + slide-in panel -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
+  <a href="#heroSection" class="mobile-nav-link" aria-current="page">Home</a>
+  <a href="about.html" class="mobile-nav-link">About</a>
+
+  <div class="mobile-nav-item">
+    <div class="mobile-nav-item-header">
+      <span>Loan Programs</span>
+      <span class="mobile-nav-arrow"></span>
+    </div>
+    <div class="mobile-nav-submenu">
+      <a href="loan-fha.html">FHA Loans</a>
+      <a href="loan-va.html">VA Loans</a>
+      <a href="loan-dscr.html">DSCR Loans</a>
+      <a href="loan-bank-statement.html">Bank Statement Loans</a>
+      <a href="loan-first-time-buyers.html">First-Time Buyers</a>
+      <a href="loan-refinancing.html">Refinancing</a>
+    </div>
+  </div>
+
+  <div class="mobile-nav-item">
+    <div class="mobile-nav-item-header">
+      <span>Resources</span>
+      <span class="mobile-nav-arrow"></span>
+    </div>
+    <div class="mobile-nav-submenu">
+      <a href="resources-insights.html">Mortgage Insights</a>
+      <a href="calculator.html">Mortgage Calculator</a>
+      
+    </div>
+  </div>
+
+  <a href="contact.html" class="mobile-nav-link">Contact</a>
+  <a href="https://edge.my1003app.com/2453986/register?time=1780521146594" class="btn btn-apply mobile-nav-apply" target="_blank" rel="noopener">Apply Now</a>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero" id="heroSection">
+  <div class="hero-bg" id="heroBg">
+    <img class="is-active hero-bg-animated" src="https://images.pexels.com/photos/8112184/pexels-photo-8112184.jpeg" alt="Modern house with swimming pool">
+  </div>
+  <div class="hero-bg-overlay"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-text">
+        <span class="eyebrow-label reveal d1">Smart Nest Mortgage Solutions</span>
+        <h1 class="display reveal d2" id="heroTitle">The smarter way to borrow for your home.</h1>
+        <div class="hero-sub reveal d3">
+          <p>Direct access to 120+ lending partners. One pre-approval, unlimited options. Get approved in 24–48 hours.</p>
+        </div>
+        <a href="https://edge.my1003app.com/2453986/register?time=1780521146594" class="btn btn-apply hero-cta reveal d4" target="_blank" rel="noopener">Apply Now</a>
+      </div>
+    </div>
+    <!-- Logos bottom right -->
+    <div class="hero-logos-badge">
+      <div class="hero-logo-item">
+        <div>
+          <img src="finance-logo.png" alt="Edge Home Finance">
+          <div class="hero-logo-name">Powered by<br>Edge Home Finance</div>
+        </div>
+      </div>
+      <div class="hero-logo-item">
+        <div>
+          <img src="smartnest.png" alt="Smart Nest Mortgage">
+          <div class="hero-logo-name">Smart Nest<br>Mortgage</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<section class="trust-bar">
+  <div class="container">
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="trust-figure trust-figure-nmls">NMLS #2453986</div>
+        <div class="trust-label">Licensed Mortgage Broker</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-figure">10+ Yrs</div>
+        <div class="trust-label">Serving Texas Homebuyers</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-figure">500+</div>
+        <div class="trust-label">Families Financed</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-figure">Equal</div>
+        <div class="trust-label">Housing Lender</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOAN PROGRAMS -->
+<section class="programs-scroll" id="programsScroll">
+  <div class="programs-pin">
+    <div class="section-head">
+      <span class="eyebrow-label">Loan Programs</span>
+      <h2 class="display">Financing built around how you actually earn.</h2>
+      <p class="lede">Whether you're a first-time buyer, self-employed, or building a rental portfolio, there's a program suited to your income and goals.</p>
+    </div>
+    <div class="program-track" id="programTrack">
+      <div class="program-card">
+        <span class="program-index">01</span>
+        <h3>FHA Loans</h3>
+        <p>Low down payment financing built for first-time and repeat buyers with flexible credit requirements.</p>
+        <a href="loan-fha.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+      <div class="program-card">
+        <span class="program-index">02</span>
+        <h3>VA Loans</h3>
+        <p>Zero down payment options for eligible veterans, active service members, and military families.</p>
+        <a href="loan-va.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+      <div class="program-card">
+        <span class="program-index">03</span>
+        <h3>DSCR Loans</h3>
+        <p>Qualify using property cash flow instead of personal income — built for investors.</p>
+        <a href="loan-dscr.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+      <div class="program-card">
+        <span class="program-index">04</span>
+        <h3>Bank Statement Loans</h3>
+        <p>Income verified through bank deposits, made for self-employed and business owners.</p>
+        <a href="loan-bank-statement.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+      <div class="program-card">
+        <span class="program-index">05</span>
+        <h3>First-Time Buyers</h3>
+        <p>Guidance and down payment options designed to make your first purchase less overwhelming.</p>
+        <a href="loan-first-time-buyers.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+      <div class="program-card">
+        <span class="program-index">06</span>
+        <h3>Refinancing</h3>
+        <p>First home, refinance, or investment property — tailored to your specific needs.</p>
+        <a href="loan-refinancing.html" class="program-link">Learn more <span>&rarr;</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- WHY CHOOSE US -->
+<section class="whyus-pin-section" id="whyUsSection">
+  <div class="whyus-pin" id="whyusPin">
+    <div class="container">
+      <div class="whyus-wrap">
+        <div class="section-head">
+          <span class="eyebrow-label">Why Choose Us</span>
+          <h2 class="display">Guidance you can trust, options you won't find elsewhere.</h2>
+          <p class="lede">We're not tied to one bank's rate sheet. As your mortgage advisor, we work for you — comparing options across our full lending network to get you approved on terms that fit.</p>
+          <div class="whyus-brand-badge">
+            <img src="smartnest.png" alt="Smart Nest Mortgage">
+            <span class="whyus-brand-name">Smart Nest<br>Mortgage</span>
+          </div>
+          <div class="whyus-progress-track" id="whyusProgress">
+            <div class="whyus-progress-dot"><div class="fill" data-dot="0"></div></div>
+            <div class="whyus-progress-dot"><div class="fill" data-dot="1"></div></div>
+            <div class="whyus-progress-dot"><div class="fill" data-dot="2"></div></div>
+            <div class="whyus-progress-dot"><div class="fill" data-dot="3"></div></div>
+          </div>
+        </div>
+        <div class="whyus-list" id="whyusList">
+          <div class="whyus-item" data-index="0">
+            <span class="whyus-index">01</span>
+            <div>
+              <h3>120+ Lender Options</h3>
+              <p>Access to a broad network of lending partners means more competitive rates and programs, not just one bank's offer.</p>
+            </div>
+          </div>
+          <div class="whyus-item" data-index="1">
+            <span class="whyus-index">02</span>
+            <div>
+              <h3>Fast Pre-Approvals</h3>
+              <p>Get pre-approved in as little as 24–48 hours, so you can move quickly and confidently when it matters.</p>
+            </div>
+          </div>
+          <div class="whyus-item" data-index="2">
+            <span class="whyus-index">03</span>
+            <div>
+              <h3>Licensed & Trusted Advisors</h3>
+              <p>Every recommendation comes from licensed mortgage professionals focused on your best interest, not a quota.</p>
+            </div>
+          </div>
+          <div class="whyus-item" data-index="3">
+            <span class="whyus-index">04</span>
+            <div>
+              <h3>Guidance at Every Step</h3>
+              <p>From first application to closing day, we walk you through each decision in plain language — no jargon, no surprises.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDGE HOME FINANCE AFFILIATION -->
+<section class="section affiliate-section" id="affiliateSection">
+  <div class="container">
+    <div class="affiliate-wrap">
+      <div class="affiliate-left">
+        <div class="affiliate-logo">
+          <span class="name">Edge Home Finance</span>
+          <span class="role">Mortgage Brokerage</span>
+        </div>
+        <h2 class="display">Backed by a name you can trust.</h2>
+        <p class="lede">I originate loans through Edge Home Finance, giving me access to wholesale pricing and a wide lender network I bring to every client I work with.</p>
+        <div class="affiliate-brand-badge">
+          <img src="Finance.png" alt="Edge Home Finance, LLC">
+        </div>
+        <div class="affiliate-powered-by">Powered by Edge Home Finance</div>
+      </div>
+      <div class="affiliate-right">
+        <p>Edge Home Finance is the mortgage brokerage I'm affiliated with — built to give originators like me direct access to a deep bench of wholesale lenders, competitive pricing, and fast, transparent underwriting.</p>
+        <p>That backing means you're not just working with an individual loan officer; you have the pricing power, technology, and compliance support of an established brokerage behind every rate quote and closing timeline I give you.</p>
+        <p>From first-time buyers to seasoned investors, every client I work with benefits from this partnership — faster turn times, more loan program options, and underwriting decisions made with real flexibility rather than a rigid, one-size-fits-all checklist.</p>
+        <a class="affiliate-link" href="https://edgehomefinance.com/" target="_blank" rel="noopener">Visit edgehomefinance.com <span>&rarr;</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICE AREAS -->
+<section class="section section-alt section-fit areas-bg" id="areasSection">
+  <div class="container">
+    <div class="areas-wrap">
+      <div>
+        <span class="eyebrow-label">Where We Work</span>
+        <h2 class="display">Local expertise across the Houston Metro.</h2>
+        <p class="lede">Every market moves differently. Working closely across these communities means pricing and pre-approvals reflect what's actually happening on the ground.</p>
+      </div>
+      <ul class="areas-list">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Houston <span class="area-tag">(77002, 77007), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Sugar Land <span class="area-tag">(77479, 77478), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Pearland <span class="area-tag">(77584, 77581), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Missouri City <span class="area-tag">(77459, 77489), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Stafford <span class="area-tag">(77477, 77497), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Richmond <span class="area-tag">(77406, 77407), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Katy <span class="area-tag">(77494, 77449), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Rosenberg <span class="area-tag">(77471), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Cypress <span class="area-tag">(77429, 77433), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Spring <span class="area-tag">(77379, 77388), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">The Woodlands <span class="area-tag">(77380), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Humble <span class="area-tag">(77338, 77396), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">League City <span class="area-tag">(77573), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Pasadena <span class="area-tag">(77502, 77505), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Conroe <span class="area-tag">(77301, 77304), TX</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="area-name">Fulshear <span class="area-tag">(77441), TX</span></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="section cta-banner section-alt" id="ctaBanner">
+  <div class="container">
+    <span class="eyebrow-label">Get Started</span>
+    <h2 class="display">Ready to see what you actually qualify for?</h2>
+    <p class="lede">A quick conversation is all it takes. Tell us about your goals and we'll match you with the right loan program, lender, and rate — no pressure, no obligation.</p>
+    <div class="btn-row-static">
+      <a href="contact.html" class="btn-lightbeam">
+        <span class="btn-lightbeam-inner">Contact Me</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <span class="footer-brand-name">Robin Thomas</span>
+        <span class="footer-brand-role">Mortgage Broker & Advisor</span>
+        <p class="footer-brand-desc">Robin Thomas is a registered independent mortgage broker. We connect clients with mortgage programs from leading institutional lenders.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Mortgage Programs</h4>
+        <ul>
+          <li><a href="loan-fha.html">FHA Loans</a></li>
+          <li><a href="loan-va.html">VA Loans</a></li>
+          <li><a href="loan-dscr.html">DSCR Investor Loans</a></li>
+          <li><a href="loan-bank-statement.html">Bank Statement Loans</a></li>
+          <li><a href="loan-first-time-buyers.html">First Time Home Buyer</a></li>
+          <li><a href="loan-refinancing.html">Refinance Houston</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compliance & Licensing</h4>
+        <p class="footer-compliance-text">*All loan approvals are subject to underwriting criteria, credit review, and property appraisal. This is not a commitment to lend.</p>
+        <p class="footer-compliance-text">Robin Thomas operates strictly as an independent origination broker. Personal NMLS #2453986.</p>
+      </div>
+      <div class="footer-powered-full">
+        <div class="footer-divider"></div>
+        <div class="footer-powered-row">
+          <div class="footer-powered">
+            <div class="edge-badge">
+              <img src="finance-logo.png" alt="Edge Home Finance, LLC">
+            </div>
+            <div class="footer-powered-text">
+              <div class="footer-powered-title">Powered by Edge Home Finance, LLC</div>
+              <div class="footer-powered-nmls">Company NMLS #891464</div>
+            </div>
+          </div>
+          <div class="footer-powered">
+            <div class="snm-badge">
+              <img src="smartnest.png" alt="Smart Nest Mortgage">
+            </div>
+            <div class="footer-powered-text">
+              <div class="footer-powered-title">Smart Nest Mortgage</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p style="font-size:12px;">© <span id="year"></span> Robin Thomas Mortgage Broker. NMLS #2453986. All rights reserved.</p>
+      <div class="footer-legal-links">
+        <a href="#" style="font-size:12px; text-decoration:none;">Privacy Policy</a>
+        <a href="#" style="font-size:12px; text-decoration:none;">Licensing Disclaimer</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var STAGGER = 0.028, BASE_DELAY = 0.15;
+    function wrapLetters(root){
+      var index = 0;
+      function makeCharMask(ch){
+        var mask = document.createElement('span');
+        mask.className = 'char-mask';
+        var inner = document.createElement('span');
+        inner.className = 'char';
+        inner.textContent = ch;
+        inner.style.animationDelay = (BASE_DELAY + index * STAGGER).toFixed(3) + 's';
+        index++;
+        mask.appendChild(inner);
+        return mask;
+      }
+      function processNode(node){
+        if (node.nodeType === Node.TEXT_NODE) {
+          var frag = document.createDocumentFragment();
+          var text = node.textContent;
+          var words = text.split(' ');
+          words.forEach(function(word, wIndex){
+            if (word.length) {
+              var wordSpan = document.createElement('span');
+              wordSpan.className = 'char-word';
+              for (var i = 0; i < word.length; i++) {
+                wordSpan.appendChild(makeCharMask(word[i]));
+              }
+              frag.appendChild(wordSpan);
+            }
+            if (wIndex < words.length - 1) {
+              var spaceSpan = document.createElement('span');
+              spaceSpan.className = 'char-space';
+              frag.appendChild(spaceSpan);
+            }
+          });
+          node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.tagName === 'BR') return;
+          Array.prototype.slice.call(node.childNodes).forEach(processNode);
+        }
+      }
+      Array.prototype.slice.call(root.childNodes).forEach(processNode);
+    }
+    var title = document.getElementById('heroTitle');
+    if (title) wrapLetters(title);
+  })();
+
+  // Hero logos fade-up on scroll
+  (function(){
+    var logoBadge = document.querySelector('.hero-logos-badge');
+    if (!logoBadge) return;
+    
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    observer.observe(logoBadge);
+  })();
+
+  // header scroll state
+  (function(){
+    var header = document.getElementById('siteHeader');
+    function onScroll(){
+      if (window.scrollY > 12) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    }
+    document.addEventListener('scroll', onScroll);
+    onScroll();
+  })();
+
+  // footer year
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---------- smooth fade-up reveal on scroll (top to bottom) ----------
+  (function(){
+    var targets = Array.prototype.slice.call(document.querySelectorAll('.fade-up-section'));
+    if (!targets.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      targets.forEach(function(el){ el.classList.add('in-view'); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+
+    targets.forEach(function(el){ observer.observe(el); });
+  })();
+
+  // ---------- keep the page pinned at the top through reloads/back-forward nav ----------
+  (function(){
+    // Belt-and-braces alongside the early <head> script: also catch the
+    // case where the browser restores scroll position from bfcache
+    // (Safari/Firefox back-forward navigation) after all scripts have
+    // already run once.
+    window.scrollTo(0, 0);
+    window.addEventListener('pageshow', function(e){
+      if (e.persisted) {
+        window.scrollTo(0, 0);
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      }
+    });
+  })();
+
+  // ---------- pinned horizontal-scroll gallery: loan programs ----------
+  (function(){
+    var PIN_MIN_WIDTH = 900; // below this, use the plain swipeable fallback instead of pinning
+    var currentTween = null;
+    var currentTrigger = null;
+
+    function destroyProgramsScroll(){
+      if (currentTween) { currentTween.kill(); currentTween = null; }
+      if (currentTrigger) { currentTrigger.kill(); currentTrigger = null; }
+      var progressFill = document.getElementById('programProgressFill');
+      if (progressFill) progressFill.style.width = '0%';
+    }
+
+    function setupProgramsScroll(){
+      if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+      var section = document.getElementById('programsScroll');
+      var track = document.getElementById('programTrack');
+      var progressFill = document.getElementById('programProgressFill');
+      if (!section || !track) return;
+
+      destroyProgramsScroll();
+
+      if (window.innerWidth < PIN_MIN_WIDTH) return; // mobile/tablet: native scroll fallback, no pin
+
+      // Widths are only trustworthy once fonts/layout have settled, so re-measure here rather than assume.
+      var scrollDistance = track.scrollWidth - section.offsetWidth;
+      if (scrollDistance <= 0) return; // content already fits, nothing to pin/scroll
+
+      currentTween = gsap.to(track, {
+        x: -scrollDistance,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: '+=' + scrollDistance,
+          scrub: 0.6,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: function(self){
+            if (progressFill) progressFill.style.width = (self.progress * 100) + '%';
+          }
+        }
+      });
+      currentTrigger = currentTween.scrollTrigger;
+    }
+
+    // Safety check: give the browser two animation frames after "load" so images/fonts/layout
+    // have actually painted before we read scrollWidth/offsetWidth — reading too early is the
+    // most common cause of ScrollTrigger pinning against stale (usually 0 or wrong) measurements.
+    function safeInit(){
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          setupProgramsScroll();
+        });
+      });
+    }
+
+    function boot(){
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(safeInit).catch(safeInit);
+      } else {
+        safeInit();
+      }
+    }
+
+    if (document.readyState === 'complete') {
+      boot();
+    } else {
+      window.addEventListener('load', boot);
+    }
+
+    // Re-measure on resize (handles orientation change and crossing the pin breakpoint)
+    var resizeTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function(){
+        setupProgramsScroll();
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      }, 200);
+    });
+  })();
+
+  // ---------- hero background slideshow: fade to next image every 2s ----------
+  (function(){
+    var wrap = document.getElementById('heroBg');
+    if (!wrap) return;
+    var imgs = Array.prototype.slice.call(wrap.querySelectorAll('img'));
+    if (imgs.length < 2) return;
+    var current = 0;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    setInterval(function(){
+      var next = (current + 1) % imgs.length;
+      imgs[current].classList.remove('is-active');
+      imgs[next].classList.add('is-active');
+      current = next;
+    }, 5000);
+  })();
+
+  // ---------- pinned "Why Choose Us" section: right-side points reveal one by one on scroll ----------
+  (function(){
+    var PIN_MIN_WIDTH = 821; // below this, CSS falls back to a plain static list, so skip JS entirely
+    var STEP_DISTANCE = 340; // scroll distance (px) per transition, feeds scrub pacing
+    var currentTl = null;
+    var currentTrigger = null;
+
+    function destroyWhyUsScroll(){
+      if (currentTl) { currentTl.kill(); currentTl = null; }
+      if (currentTrigger) { currentTrigger.kill(); currentTrigger = null; }
+    }
+
+    function setupWhyUsScroll(){
+      if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+      var section = document.getElementById('whyUsSection');
+      var list = document.getElementById('whyusList');
+      if (!section || !list) return;
+
+      destroyWhyUsScroll();
+
+      var items = Array.prototype.slice.call(list.querySelectorAll('.whyus-item'));
+      var dots = Array.prototype.slice.call(document.querySelectorAll('#whyusProgress .fill'));
+      if (items.length < 2) return;
+
+      if (window.innerWidth < PIN_MIN_WIDTH) return; // mobile/tablet: static fallback, no pin
+
+      // Reset inline styles GSAP may have set on a previous pass, then establish the starting state:
+      // ALL items hidden, including the first — nothing on the right shows until the user scrolls
+      // into the pinned section, then each item reveals in sequence and stays visible.
+      gsap.set(items, { clearProps: 'all' });
+      gsap.set(items, { opacity: 0, y: 20 });
+      dots.forEach(function(d){ d.style.width = '0%'; });
+
+      var totalDistance = STEP_DISTANCE * items.length;
+
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: '+=' + totalDistance,
+          scrub: 0.6,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: function(self){
+            var stepProgress = self.progress * items.length;
+            dots.forEach(function(d, i){
+              var fillPct = Math.max(0, Math.min(100, (stepProgress - i) * 100));
+              d.style.width = fillPct + '%';
+            });
+          }
+        }
+      });
+
+      // Each item only ever animates in (opacity/translate 0 -> 1/0) and is never animated back out,
+      // so earlier points stay visible on screen as later ones stack in below them.
+      for (var i = 0; i < items.length; i++) {
+        tl.to(items[i], { opacity: 1, y: 0, duration: 1 }, i);
+      }
+
+      currentTl = tl;
+      currentTrigger = tl.scrollTrigger;
+    }
+
+    function safeInitWhyUs(){
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          setupWhyUsScroll();
+        });
+      });
+    }
+
+    function bootWhyUs(){
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(safeInitWhyUs).catch(safeInitWhyUs);
+      } else {
+        safeInitWhyUs();
+      }
+    }
+
+    if (document.readyState === 'complete') {
+      bootWhyUs();
+    } else {
+      window.addEventListener('load', bootWhyUs);
+    }
+
+    var whyUsResizeTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(whyUsResizeTimer);
+      whyUsResizeTimer = setTimeout(function(){
+        setupWhyUsScroll();
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      }, 200);
+    });
+  })();
+
+  // ---------- pinned "Where We Work" section: stays fixed while the CTA banner slides up over it ----------
+  (function(){
+    var PIN_MIN_WIDTH = 701; // below this, .section-fit falls back to auto height, so skip JS pin
+    var currentTrigger = null;
+
+    function destroyAreasPin(){
+      if (currentTrigger) { currentTrigger.kill(); currentTrigger = null; }
+    }
+
+    function setupAreasPin(){
+      if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+      var section = document.getElementById('areasSection');
+      if (!section) return;
+
+      destroyAreasPin();
+
+      if (window.innerWidth < PIN_MIN_WIDTH) return; // mobile: static fallback, no pin
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var nextSection = document.getElementById('ctaBanner');
+
+      currentTrigger = ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        endTrigger: nextSection || section, // end when the CTA banner reaches the top, not the pinned section's own bottom
+        end: 'top top',
+        pin: true,
+        pinType: 'fixed', // avoid GSAP's default transform-based pin, which fights with .fade-up-section's own transform on this element
+        pinSpacing: false, // don't reserve extra space, so the CTA banner scrolls up immediately and covers the pinned section
+        anticipatePin: 1,
+        invalidateOnRefresh: true
+      });
+    }
+
+    function safeInitAreasPin(){
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          setupAreasPin();
+        });
+      });
+    }
+
+    function bootAreasPin(){
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(safeInitAreasPin).catch(safeInitAreasPin);
+      } else {
+        safeInitAreasPin();
+      }
+    }
+
+    if (document.readyState === 'complete') {
+      bootAreasPin();
+    } else {
+      window.addEventListener('load', bootAreasPin);
+    }
+
+    var areasResizeTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(areasResizeTimer);
+      areasResizeTimer = setTimeout(function(){
+        setupAreasPin();
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      }, 200);
+    });
+  })();
+
+  // ---------- nav bar visibility: shown from the start (transparent during intro), solid once scrolled past intro ----------
+  (function(){
+    var siteHeader = document.getElementById('siteHeader');
+    var scrollWrap = document.getElementById('scrollWrap');
+    
+    if (!siteHeader) return;
+    
+    // Always visible, including during the intro animation
+    siteHeader.classList.add('visible');
+    
+    if (!scrollWrap) return;
+    
+    function updateHeaderScrolledState(){
+      var scrollWrapBottom = scrollWrap.offsetHeight;
+      var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (currentScroll >= scrollWrapBottom) { // Solid background once the intro section has fully scrolled past
+        siteHeader.classList.add('scrolled');
+      } else {
+        siteHeader.classList.remove('scrolled');
+      }
+    }
+    
+    window.addEventListener('scroll', updateHeaderScrolledState);
+    window.addEventListener('resize', updateHeaderScrolledState);
+    
+    // Initial check
+    updateHeaderScrolledState();
+  })();
+</script>
+
+<script>
+  // ---------- mobile nav (hamburger + slide-in panel) ----------
+  (function(){
+    var toggle = document.getElementById('navToggle');
+    var panel = document.getElementById('mobileNav');
+    var overlay = document.getElementById('mobileNavOverlay');
+    if (!toggle || !panel || !overlay) return;
+
+    function openNav(){
+      toggle.classList.add('is-open');
+      panel.classList.add('is-open');
+      overlay.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('nav-open');
+    }
+    function closeNav(){
+      toggle.classList.remove('is-open');
+      panel.classList.remove('is-open');
+      overlay.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
+    }
+    function toggleNav(){
+      if (panel.classList.contains('is-open')) closeNav();
+      else openNav();
+    }
+
+    toggle.addEventListener('click', toggleNav);
+    overlay.addEventListener('click', closeNav);
+
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') closeNav();
+    });
+
+    // Close the panel automatically if the viewport grows back to desktop size
+    window.addEventListener('resize', function(){
+      if (window.innerWidth > 980) closeNav();
+    });
+
+    // Accordion behavior for Loan Programs / Resources inside the mobile panel
+    var items = Array.prototype.slice.call(panel.querySelectorAll('.mobile-nav-item'));
+    items.forEach(function(item){
+      var header = item.querySelector('.mobile-nav-item-header');
+      header.addEventListener('click', function(){
+        var wasOpen = item.classList.contains('is-open');
+        items.forEach(function(i){ i.classList.remove('is-open'); });
+        if (!wasOpen) item.classList.add('is-open');
+      });
+    });
+
+    // Close the panel when a plain link inside it is tapped
+    panel.querySelectorAll('.mobile-nav-link, .mobile-nav-submenu a').forEach(function(link){
+      link.addEventListener('click', closeNav);
+    });
+  })();
+</script>
+
+</body>
+</html>
